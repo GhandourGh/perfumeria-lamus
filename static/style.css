@@ -645,6 +645,125 @@ body[data-section="vendor"] .identity-seal {
 
 .row-actions { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
 
+/* Hallmark · component: customer cards · genre: modern-minimal · theme: Maison-gold
+ * states: default · hover · focus · active · disabled · loading · error · success
+ * contrast: pass (46–50) · pre-emit critique: P5 H5 E5 S5 R5 V4
+ */
+.customer-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+  padding-top: var(--space-2);
+}
+
+.customer-card {
+  display: flex;
+  min-width: 0;
+  min-height: 228px;
+  flex-direction: column;
+  padding: var(--space-5);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-soft);
+  transition: border-color .15s ease;
+}
+
+.customer-card:hover {
+  border-color: var(--rule);
+}
+
+.customer-card[hidden] { display: none; }
+
+.customer-card-head {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.customer-card-identity {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-1);
+}
+
+.customer-card-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.customer-card-name:hover { color: var(--gold-deep); }
+
+.customer-card-phone {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.customer-card-phone i,
+.customer-card-phone svg {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  color: var(--faint);
+}
+
+.customer-card-balance {
+  display: grid;
+  gap: var(--space-1);
+  margin: var(--space-5) 0;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--hairline-soft);
+}
+
+.customer-card-balance > span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.customer-card-balance .amount {
+  font-family: var(--font-display);
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+.customer-card-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin-top: auto;
+}
+
+.customer-card-actions .btn { min-width: 0; }
+.customer-card-actions .btn:only-child { grid-column: 1 / -1; }
+
+@media (max-width: 1180px) {
+  .customer-card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 640px) {
+  .customer-card-grid { grid-template-columns: minmax(0, 1fr); }
+  .customer-card { min-height: 0; padding: var(--space-4); }
+}
+
+@media (max-width: 360px) {
+  .customer-card-head { align-items: flex-start; flex-direction: column; }
+  .customer-card-actions { grid-template-columns: minmax(0, 1fr); }
+  .customer-card-actions .btn { grid-column: 1; }
+}
+
 /* Stacked rows on small screens (cards from table rows) */
 @media (max-width: 720px) {
   .table-stack thead { display: none; }

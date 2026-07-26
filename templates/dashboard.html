@@ -45,41 +45,49 @@
       <input type="search" data-registry-search placeholder="Search by name, phone, or note…" aria-label="Search customers">
     </div>
   </div>
-  <div class="table-scroll">
-    <table class="table table-stack" data-registry>
-      <thead>
-        <tr>
-          <th scope="col">Customer</th>
-          <th scope="col">Status</th>
-          <th scope="col" class="num">Balance due</th>
-          <th scope="col"><span class="sr-only">Actions</span></th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for customer in customers %}
-        <tr data-row
-            data-search="{{ (customer.name ~ ' ' ~ (customer.phone or '') ~ ' ' ~ (customer.notes or ''))|lower }}"
-            data-balance="{{ customer.balance }}">
-          <td data-th="Customer">
-            <a class="row-link" href="{{ url_for('customer_detail', customer_id=customer.id) }}">
-              <span class="row-title">{{ customer.name }}</span>
-            </a>
-            <div class="row-sub">{{ customer.phone or 'No phone on file' }}</div>
-          </td>
-          <td data-th="Status">{{ ui.account_badge(customer.balance) }}</td>
-          <td data-th="Balance due" class="num">
-            <span class="amount {% if customer.balance > 0 %}amount-due{% else %}amount-muted{% endif %}">{{ customer.balance|cop }}</span>
-          </td>
-          <td data-th="">
-            <div class="row-actions">
-              {% if customer.balance > 0 %}<a class="btn btn-sm btn-gold" href="{{ url_for('customer_detail', customer_id=customer.id, action='pay') }}"><i data-lucide="hand-coins"></i>Payment</a>{% endif %}
-              <a class="btn btn-sm" href="{{ url_for('customer_detail', customer_id=customer.id) }}"><i data-lucide="book-open"></i>Open account</a>
-            </div>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  <div class="customer-card-grid" data-registry aria-label="Customer accounts">
+    {% for customer in customers %}
+    <article class="customer-card"
+             data-row
+             data-search="{{ (customer.name ~ ' ' ~ (customer.phone or '') ~ ' ' ~ (customer.notes or ''))|lower }}"
+             data-balance="{{ customer.balance }}"
+             aria-labelledby="customer-{{ customer.id }}-name">
+      <div class="customer-card-head">
+        <div class="customer-card-identity">
+          <a class="customer-card-name"
+             id="customer-{{ customer.id }}-name"
+             href="{{ url_for('customer_detail', customer_id=customer.id) }}">
+            {{ customer.name }}
+          </a>
+          <span class="customer-card-phone">
+            <i data-lucide="phone" aria-hidden="true"></i>
+            {{ customer.phone or 'No phone on file' }}
+          </span>
+        </div>
+        {{ ui.account_badge(customer.balance) }}
+      </div>
+
+      <div class="customer-card-balance">
+        <span>Balance due</span>
+        <strong class="amount {% if customer.balance > 0 %}amount-due{% else %}amount-muted{% endif %}">
+          {{ customer.balance|cop }}
+        </strong>
+      </div>
+
+      <div class="customer-card-actions">
+        {% if customer.balance > 0 %}
+        <a class="btn btn-sm btn-gold"
+           href="{{ url_for('customer_detail', customer_id=customer.id, action='pay') }}">
+          <i data-lucide="hand-coins" aria-hidden="true"></i>Payment
+        </a>
+        {% endif %}
+        <a class="btn btn-sm"
+           href="{{ url_for('customer_detail', customer_id=customer.id) }}">
+          <i data-lucide="book-open" aria-hidden="true"></i>Open account
+        </a>
+      </div>
+    </article>
+    {% endfor %}
   </div>
   {% if customers %}
     <div data-registry-empty hidden>
