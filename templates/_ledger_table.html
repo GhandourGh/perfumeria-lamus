@@ -37,6 +37,8 @@
         <div class="ledger-entry-meta">
           {% if row.is_voided %}
             <span class="badge badge-neutral">Voided</span>
+          {% elif row.is_overdue %}
+            {{ ui.overdue_badge(row.overdue_days) }}
           {% elif is_charge %}
             {{ ui.status_badge(row.payment_status) }}
           {% endif %}

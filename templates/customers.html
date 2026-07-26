@@ -25,6 +25,7 @@
     <div class="chip-row" role="group" aria-label="Filter customers">
       <button class="chip" type="button" data-filter="all" aria-pressed="true">All</button>
       <button class="chip" type="button" data-filter="debt" aria-pressed="false">With balance</button>
+      <button class="chip" type="button" data-filter="overdue" aria-pressed="false">Overdue</button>
       <button class="chip" type="button" data-filter="clear" aria-pressed="false">Settled</button>
       <button class="chip" type="button" data-filter="paid-recently" aria-pressed="false">Paid recently</button>
     </div>
@@ -46,6 +47,7 @@
              data-search="{{ (customer.name ~ ' ' ~ (customer.phone or '') ~ ' ' ~ (customer.notes or ''))|lower }}"
              data-name="{{ customer.name|lower }}"
              data-balance="{{ customer.balance }}"
+             data-overdue="{{ 'true' if customer.is_overdue else 'false' }}"
              data-lastpay="{{ customer.last_payment_at or '' }}"
              data-lastactivity="{{ customer.last_activity_at or '' }}"
              data-created="{{ customer.created_at or '' }}"
@@ -62,7 +64,7 @@
             {{ customer.phone or 'No phone on file' }}
           </span>
         </div>
-        {{ ui.account_badge(customer.balance) }}
+        {{ ui.account_badge(customer.balance, customer.is_overdue, customer.overdue_days) }}
       </div>
 
       <div class="customer-card-balance">

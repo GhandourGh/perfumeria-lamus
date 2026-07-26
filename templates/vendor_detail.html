@@ -13,7 +13,7 @@
       <div class="contact">
         <span><i data-lucide="phone"></i>{{ vendor.phone or 'No phone on file' }}</span>
         <span>
-          {% if balance > 0 %}<span class="badge badge-due">Payable</span>{% else %}<span class="badge badge-settled">Settled</span>{% endif %}
+          {% if vendor.is_overdue %}{{ ui.overdue_badge(vendor.overdue_days) }}{% elif balance > 0 %}<span class="badge badge-due">Payable</span>{% else %}<span class="badge badge-settled">Settled</span>{% endif %}
         </span>
       </div>
     </div>
@@ -34,7 +34,7 @@
   <div class="stat">
     <div class="stat-label">Payable now</div>
     <div class="stat-value {% if balance > 0 %}is-due{% endif %}">{{ balance|cop }}</div>
-    <div class="stat-note">{% if balance > 0 %}Owed by the store{% else %}Nothing outstanding{% endif %}</div>
+    <div class="stat-note">{% if vendor.is_overdue %}Overdue by {{ vendor.overdue_days }} day{{ '' if vendor.overdue_days == 1 else 's' }}{% elif balance > 0 %}Owed by the store{% else %}Nothing outstanding{% endif %}</div>
   </div>
   <div class="stat">
     <div class="stat-label">Purchased to date</div>

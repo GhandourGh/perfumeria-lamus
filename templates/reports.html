@@ -107,7 +107,7 @@
       <tbody>
         {% for customer in customers %}
         <tr>
-          <td class="row-title">{{ customer.name }}</td>
+          <td class="row-title">{{ customer.name }}{% if customer.is_overdue %}<div>{{ ui.overdue_badge(customer.overdue_days) }}</div>{% endif %}</td>
           <td class="muted">{{ customer.phone or '—' }}</td>
           <td class="num"><span class="amount amount-muted">{{ customer.total_debt|cop }}</span></td>
           <td class="num"><span class="amount amount-muted">{{ customer.total_paid|cop }}</span></td>
@@ -145,7 +145,7 @@
       <tbody>
         {% for vendor in vendors %}
         <tr>
-          <td class="row-title">{{ vendor.name }}</td>
+          <td class="row-title">{{ vendor.name }}{% if vendor.is_overdue %}<div>{{ ui.overdue_badge(vendor.overdue_days) }}</div>{% endif %}</td>
           <td class="muted">{{ vendor.phone or '—' }}</td>
           <td class="num"><span class="amount amount-muted">{{ vendor.total_purchased|cop }}</span></td>
           <td class="num"><span class="amount amount-muted">{{ vendor.total_paid|cop }}</span></td>

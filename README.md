@@ -59,7 +59,9 @@ either item to GitHub.
 ## Sections
 
 - **Dashboard** — outstanding balance, overdue total, collected today, new credit today, customer finder, attention list, house accounts.
-- **Overdue accounts** — credit sales past their due date, or unpaid for 30+ days when no due date was set.
+- **Overdue accounts** — customer credit sales past their due date and customer
+  or vendor balances left unpaid for more than 30 days. Includes filters,
+  account badges, ledger status, statements, dashboards, and reports.
 - **Customers / Vendors** — searchable, filterable registries with lifetime totals and quick actions.
 - **Customer / vendor accounts** — full ledger, live balance previews when recording credit sales and payments, overpayment prevention, FIFO partial payments.
 - **Bank** — Bancolombia balance movements with notes.
@@ -74,6 +76,7 @@ vendor), **Overdue** (past due date, or older than 30 days without one).
 ## Data notes
 
 - Currency is COP, formatted `$1.234.567`.
-- `ledger.due_date` is optional; when empty, overdue uses the 30-day aging window
+- `ledger.due_date` is optional. A customer’s chosen due date takes priority;
+  otherwise customer debts and vendor purchases use the 30-day aging window
   (`OVERDUE_AGING_DAYS` in `database.py`).
 - All schema changes are additive; existing tables, columns, and records are untouched.

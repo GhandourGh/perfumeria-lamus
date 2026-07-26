@@ -12,7 +12,7 @@
       <h1>{{ customer.name }}</h1>
       <div class="contact">
         <span><i data-lucide="phone"></i>{{ customer.phone or 'No phone on file' }}</span>
-        <span>{{ ui.account_badge(balance) }}</span>
+        <span>{{ ui.account_badge(balance, customer.is_overdue, customer.overdue_days) }}</span>
       </div>
     </div>
   </div>
@@ -32,7 +32,7 @@
   <div class="stat">
     <div class="stat-label">Balance due</div>
     <div class="stat-value {% if balance > 0 %}is-due{% endif %}">{{ balance|cop }}</div>
-    <div class="stat-note">{% if balance > 0 %}Owed to the store{% else %}Account settled{% endif %}</div>
+    <div class="stat-note">{% if customer.is_overdue %}Overdue by {{ customer.overdue_days }} day{{ '' if customer.overdue_days == 1 else 's' }}{% elif balance > 0 %}Owed to the store{% else %}Account settled{% endif %}</div>
   </div>
   <div class="stat">
     <div class="stat-label">Credit taken</div>

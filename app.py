@@ -514,10 +514,13 @@ def vendor_overview():
         reverse=True,
     )
     payable = [v for v in vendors if v["balance"] > 0]
+    overdue = [v for v in payable if v["is_overdue"]]
     stats = {
         "total_payable": sum(v["balance"] for v in payable),
         "vendor_count": len(vendors),
         "vendors_with_balance": len(payable),
+        "overdue_vendor_count": len(overdue),
+        "total_overdue": sum(v["balance"] for v in overdue),
         "total_purchased": sum(v["total_purchased"] for v in vendors),
         "total_paid": sum(v["total_paid"] for v in vendors),
         "bank_balance": db.get_current_bank_balance(),

@@ -20,7 +20,7 @@
   <div class="stat">
     <div class="stat-label">Amount owed</div>
     <div class="stat-value {% if stats.total_payable > 0 %}is-due{% endif %}">{{ stats.total_payable|cop }}</div>
-    <div class="stat-note">{{ stats.vendors_with_balance }} of {{ stats.vendor_count }} vendor{{ 's' if stats.vendor_count != 1 }} owed</div>
+    <div class="stat-note">{{ stats.vendors_with_balance }} of {{ stats.vendor_count }} vendor{{ 's' if stats.vendor_count != 1 }} owed · {{ stats.overdue_vendor_count }} overdue</div>
   </div>
   <div class="stat">
     <div class="stat-label">Amount paid</div>
@@ -56,6 +56,7 @@
              data-row
              data-search="{{ (vendor.name ~ ' ' ~ (vendor.phone or '') ~ ' ' ~ (vendor.notes or ''))|lower }}"
              data-balance="{{ vendor.balance }}"
+             data-overdue="{{ 'true' if vendor.is_overdue else 'false' }}"
              aria-labelledby="overview-vendor-{{ vendor.id }}-name">
       <div class="customer-card-head">
         <div class="customer-card-identity">
@@ -69,7 +70,7 @@
             {{ vendor.phone or 'No phone on file' }}
           </span>
         </div>
-        {% if vendor.balance > 0 %}<span class="badge badge-due">Payable</span>{% else %}<span class="badge badge-settled">Settled</span>{% endif %}
+        {% if vendor.is_overdue %}{{ ui.overdue_badge(vendor.overdue_days) }}{% elif vendor.balance > 0 %}<span class="badge badge-due">Payable</span>{% else %}<span class="badge badge-settled">Settled</span>{% endif %}
       </div>
 
       <div class="customer-card-balance">
@@ -134,7 +135,8 @@
             <tr>
               <td>
                 <a class="row-link row-title" href="{{ url_for('vendor_detail', vendor_id=vendor.id) }}">{{ vendor.name }}</a>
-                {% if vendor.last_payment_at %}<div class="row-sub">Last payment {{ vendor.last_payment_at|day }}</div>
+                {% if vendor.is_overdue %}<div class="row-sub row-overdue">Overdue by {{ vendor.overdue_days }} day{{ '' if vendor.overdue_days == 1 else 's' }}</div>
+                {% elif vendor.last_payment_at %}<div class="row-sub">Last payment {{ vendor.last_payment_at|day }}</div>
                 {% else %}<div class="row-sub">No payments yet</div>{% endif %}
               </td>
               <td class="num"><span class="amount amount-due">{{ vendor.balance|cop }}</span></td>

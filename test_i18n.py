@@ -127,6 +127,54 @@ def test_bank_withdrawal_allows_an_empty_note(tmp_path, monkeypatch):
     assert note == ""
 
 
+def test_overdue_status_for_customers_and_vendors(tmp_path, monkeypatch):
+    test_database = tmp_path / "overdue-test.db"
+    source = sqlite3.connect(db.DATABASE)
+    destination = sqlite3.connect(test_database)
+    source.backup(destination)
+    source.close()
+    destination.close()
+    monkeypatch.setattr(db, "DATABASE", str(test_database))
+
+    customer_id = db.add_customer("Cliente vencido")
+    db.add_debt(
+        customer_id,
+        [{"product_name": "Perfume", "price": 100_000, "quantity": 1}],
+        user_id=1,
+    )
+    vendor_id = db.add_vendor("Proveedor vencido")
+    db.add_purchase(
+        vendor_id,
+        [{"product_name": "Inventario", "price": 200_000, "quantity": 1}],
+        user_id=1,
+    )
+    with sqlite3.connect(test_database) as connection:
+        connection.execute(
+            "UPDATE ledger SET due_date = date('now', '-7 days') WHERE customer_id = ?",
+            (customer_id,),
+        )
+        connection.execute(
+            "UPDATE vendor_ledger SET created_at = datetime('now', '-45 days') WHERE vendor_id = ?",
+            (vendor_id,),
+        )
+        connection.commit()
+
+    customer = next(row for row in db.get_customers_overview() if row["id"] == customer_id)
+    vendor = next(row for row in db.get_vendors_overview() if row["id"] == vendor_id)
+    assert customer["is_overdue"] is True
+    assert customer["overdue_days"] == 7
+    assert vendor["is_overdue"] is True
+    assert vendor["overdue_days"] == 15
+
+    page = authenticated_client().get("/customers")
+    assert "Vencido · 7 días" in page.get_data(as_text=True)
+    assert 'data-filter="overdue"' in page.get_data(as_text=True)
+
+    db.add_payment(customer_id, 100_000, "CASH", user_id=1)
+    customer = next(row for row in db.get_customers_overview() if row["id"] == customer_id)
+    assert customer["is_overdue"] is False
+
+
 def test_navbar_has_one_click_backup_download():
     response = authenticated_client().get("/")
     soup = BeautifulSoup(response.data, "html.parser")

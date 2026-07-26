@@ -1,12 +1,13 @@
 import os
 import sqlite3
 from contextlib import contextmanager
-from datetime import datetime
+from datetime import date, datetime, timedelta
 
 from werkzeug.security import check_password_hash, generate_password_hash
 
 
 DATABASE = os.environ.get("PERFUMERIA_DB", "perfumeria_lamus.db")
+OVERDUE_AGING_DAYS = 30
 
 
 @contextmanager
@@ -22,6 +23,21 @@ def get_db():
 
 def now():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+def _with_overdue_status(item, due_value, has_open_balance):
+    """Attach a consistent, read-only overdue status to an account or entry."""
+    due_at = None
+    if due_value:
+        try:
+            due_at = datetime.fromisoformat(str(due_value)[:19]).date()
+        except ValueError:
+            due_at = None
+    days = (date.today() - due_at).days if due_at and has_open_balance else 0
+    item["overdue_on"] = due_at.isoformat() if due_at else None
+    item["overdue_days"] = max(days, 0)
+    item["is_overdue"] = days > 0
+    return item
 
 
 def normalize_security_answer(answer):
@@ -413,6 +429,17 @@ def get_customer_ledger(customer_id):
         """, (customer_id,)).fetchall()]
         for row in rows:
             row["items"] = [dict(i) for i in conn.execute("SELECT * FROM ledger_items WHERE ledger_id = ?", (row["id"],)).fetchall()]
+            due_value = row.get("due_date")
+            if not due_value and row["entry_type"] == "NEW_DEBT":
+                created = datetime.fromisoformat(str(row["created_at"])[:19])
+                due_value = created + timedelta(days=OVERDUE_AGING_DAYS)
+            _with_overdue_status(
+                row,
+                due_value,
+                row["entry_type"] == "NEW_DEBT"
+                and row.get("payment_status") in {"OPEN", "PARTIAL"}
+                and float(row.get("remaining_amount") or 0) > 0,
+            )
         return rows
 
 
@@ -671,6 +698,17 @@ def get_vendor_ledger(vendor_id):
         """, (vendor_id,)).fetchall()]
         for row in rows:
             row["items"] = [dict(i) for i in conn.execute("SELECT * FROM vendor_ledger_items WHERE vendor_ledger_id = ?", (row["id"],)).fetchall()]
+            due_value = None
+            if row["entry_type"] == "NEW_PURCHASE":
+                created = datetime.fromisoformat(str(row["created_at"])[:19])
+                due_value = created + timedelta(days=OVERDUE_AGING_DAYS)
+            _with_overdue_status(
+                row,
+                due_value,
+                row["entry_type"] == "NEW_PURCHASE"
+                and row.get("payment_status") in {"OPEN", "PARTIAL"}
+                and float(row.get("remaining_amount") or 0) > 0,
+            )
         return rows
 
 
@@ -926,6 +964,11 @@ def get_customers_overview():
               MAX(CASE WHEN l.entry_type = 'NEW_DEBT' AND l.is_voided = 0 AND l.is_deleted = 0
                     THEN l.created_at END) AS last_debt_at,
               MAX(CASE WHEN l.is_voided = 0 AND l.is_deleted = 0 THEN l.created_at END) AS last_activity_at
+              ,MIN(CASE WHEN l.entry_type = 'NEW_DEBT'
+                    AND l.payment_status IN ('OPEN','PARTIAL')
+                    AND l.remaining_amount > 0
+                    AND l.is_voided = 0 AND l.is_deleted = 0
+                    THEN COALESCE(date(l.due_date), date(l.created_at, '+30 days')) END) AS oldest_unpaid_due_at
             FROM customers c
             LEFT JOIN ledger l ON l.customer_id = c.id
             WHERE c.is_active = 1
@@ -936,6 +979,7 @@ def get_customers_overview():
     for row in rows:
         item = dict(row)
         item["balance"] = round(float(item["total_debt"]) - float(item["total_paid"]), 2)
+        _with_overdue_status(item, item["oldest_unpaid_due_at"], item["balance"] > 0)
         result.append(item)
     return result
 
@@ -949,7 +993,8 @@ def get_customer_summary(customer_id):
     if customer:
         customer.update({"total_debt": 0, "total_paid": 0,
                          "balance": 0, "last_payment_at": None, "last_debt_at": None,
-                         "last_activity_at": None})
+                         "last_activity_at": None, "oldest_unpaid_due_at": None,
+                         "overdue_on": None, "overdue_days": 0, "is_overdue": False})
     return customer
 
 
@@ -965,6 +1010,11 @@ def get_vendors_overview():
               MAX(CASE WHEN vl.entry_type = 'PAYMENT_MADE' AND vl.is_voided = 0 AND vl.is_deleted = 0
                     THEN vl.created_at END) AS last_payment_at,
               MAX(CASE WHEN vl.is_voided = 0 AND vl.is_deleted = 0 THEN vl.created_at END) AS last_activity_at
+              ,MIN(CASE WHEN vl.entry_type = 'NEW_PURCHASE'
+                    AND vl.payment_status IN ('OPEN','PARTIAL')
+                    AND vl.remaining_amount > 0
+                    AND vl.is_voided = 0 AND vl.is_deleted = 0
+                    THEN date(vl.created_at, '+30 days') END) AS oldest_unpaid_due_at
             FROM vendors v
             LEFT JOIN vendor_ledger vl ON vl.vendor_id = v.id
             WHERE v.is_active = 1
@@ -975,6 +1025,7 @@ def get_vendors_overview():
     for row in rows:
         item = dict(row)
         item["balance"] = round(float(item["total_purchased"]) - float(item["total_paid"]), 2)
+        _with_overdue_status(item, item["oldest_unpaid_due_at"], item["balance"] > 0)
         result.append(item)
     return result
 
@@ -995,6 +1046,7 @@ def get_dashboard_stats():
             WHERE is_voided = 0 AND is_deleted = 0 AND date(created_at) = ?
         """, (today,)).fetchone()
     with_balance = [c for c in customers if c["balance"] > 0]
+    overdue = [c for c in with_balance if c["is_overdue"]]
     return {
         "total_outstanding": sum(c["balance"] for c in with_balance),
         "total_payable": sum(max(v["balance"], 0) for v in vendors),
@@ -1002,6 +1054,8 @@ def get_dashboard_stats():
         "customer_count": len(customers),
         "vendor_count": len(vendors),
         "customers_with_balance": len(with_balance),
+        "overdue_customer_count": len(overdue),
+        "total_overdue": sum(c["balance"] for c in overdue),
         "collected_today": float(today_row["collected_today"]),
         "payments_today": int(today_row["payments_today"]),
         "debt_added_today": float(today_row["debt_added_today"]),

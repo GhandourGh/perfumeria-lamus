@@ -37,8 +37,14 @@
   {%- endif -%}
 {%- endmacro %}
 
-{% macro account_badge(balance) -%}
-  {%- if balance > 0 -%}
+{% macro overdue_badge(days) -%}
+  <span class="badge badge-overdue">Overdue · {{ days }} day{{ '' if days == 1 else 's' }}</span>
+{%- endmacro %}
+
+{% macro account_badge(balance, is_overdue=false, overdue_days=0) -%}
+  {%- if is_overdue -%}
+    {{ overdue_badge(overdue_days) }}
+  {%- elif balance > 0 -%}
     <span class="badge badge-due">Balance due</span>
   {%- else -%}
     <span class="badge badge-settled">Settled</span>

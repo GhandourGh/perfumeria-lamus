@@ -212,6 +212,7 @@
     var predicates = {
       all: function () { return true; },
       debt: function (r) { return Number(r.dataset.balance) > 0; },
+      overdue: function (r) { return r.dataset.overdue === "true"; },
       clear: function (r) { return Number(r.dataset.balance) <= 0; },
       "paid-recently": function (r) {
         if (!r.dataset.lastpay) return false;

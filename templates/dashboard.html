@@ -20,7 +20,7 @@
   <div class="stat">
     <div class="stat-label">Outstanding balance</div>
     <div class="stat-value {% if stats.total_outstanding > 0 %}is-due{% endif %}">{{ stats.total_outstanding|cop }}</div>
-    <div class="stat-note">{{ stats.customers_with_balance }} of {{ stats.customer_count }} customers owe</div>
+    <div class="stat-note">{{ stats.customers_with_balance }} of {{ stats.customer_count }} customers owe · {{ stats.overdue_customer_count }} overdue</div>
   </div>
   <div class="stat">
     <div class="stat-label">Collected today</div>
@@ -56,6 +56,7 @@
              data-row
              data-search="{{ (customer.name ~ ' ' ~ (customer.phone or '') ~ ' ' ~ (customer.notes or ''))|lower }}"
              data-balance="{{ customer.balance }}"
+             data-overdue="{{ 'true' if customer.is_overdue else 'false' }}"
              aria-labelledby="customer-{{ customer.id }}-name">
       <div class="customer-card-head">
         <div class="customer-card-identity">
@@ -69,7 +70,7 @@
             {{ customer.phone or 'No phone on file' }}
           </span>
         </div>
-        {{ ui.account_badge(customer.balance) }}
+        {{ ui.account_badge(customer.balance, customer.is_overdue, customer.overdue_days) }}
       </div>
 
       <div class="customer-card-balance">
@@ -175,7 +176,8 @@
             <tr>
               <td>
                 <a class="row-link row-title" href="{{ url_for('customer_detail', customer_id=customer.id) }}">{{ customer.name }}</a>
-                {% if customer.last_payment_at %}<div class="row-sub">Last payment {{ customer.last_payment_at|day }}</div>
+                {% if customer.is_overdue %}<div class="row-sub row-overdue">Overdue by {{ customer.overdue_days }} day{{ '' if customer.overdue_days == 1 else 's' }}</div>
+                {% elif customer.last_payment_at %}<div class="row-sub">Last payment {{ customer.last_payment_at|day }}</div>
                 {% else %}<div class="row-sub">No payments yet</div>{% endif %}
               </td>
               <td class="num"><span class="amount amount-due">{{ customer.balance|cop }}</span></td>

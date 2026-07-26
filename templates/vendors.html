@@ -25,6 +25,7 @@
     <div class="chip-row" role="group" aria-label="Filter vendors">
       <button class="chip" type="button" data-filter="all" aria-pressed="true">All</button>
       <button class="chip" type="button" data-filter="debt" aria-pressed="false">With payable</button>
+      <button class="chip" type="button" data-filter="overdue" aria-pressed="false">Overdue</button>
       <button class="chip" type="button" data-filter="clear" aria-pressed="false">Settled</button>
     </div>
     <label class="field registry-sort">
@@ -45,6 +46,7 @@
              data-search="{{ (vendor.name ~ ' ' ~ (vendor.phone or '') ~ ' ' ~ (vendor.notes or ''))|lower }}"
              data-name="{{ vendor.name|lower }}"
              data-balance="{{ vendor.balance }}"
+             data-overdue="{{ 'true' if vendor.is_overdue else 'false' }}"
              data-lastpay="{{ vendor.last_payment_at or '' }}"
              data-lastactivity="{{ vendor.last_activity_at or '' }}"
              data-created="{{ vendor.created_at or '' }}"
@@ -61,7 +63,7 @@
             {{ vendor.phone or 'No phone on file' }}
           </span>
         </div>
-        {% if vendor.balance > 0 %}<span class="badge badge-due">Payable</span>{% else %}<span class="badge badge-settled">Settled</span>{% endif %}
+        {% if vendor.is_overdue %}{{ ui.overdue_badge(vendor.overdue_days) }}{% elif vendor.balance > 0 %}<span class="badge badge-due">Payable</span>{% else %}<span class="badge badge-settled">Settled</span>{% endif %}
       </div>
 
       <div class="customer-card-balance">

@@ -98,7 +98,8 @@
           <td>
             {%- if row.is_voided %}—
             {%- elif row.entry_type in ('NEW_DEBT','NEW_PURCHASE') -%}
-              {%- if row.payment_status == 'PAID' %}Paid
+              {%- if row.is_overdue %}Overdue · {{ row.overdue_days }} day{{ '' if row.overdue_days == 1 else 's' }}
+              {%- elif row.payment_status == 'PAID' %}Paid
               {%- elif row.payment_status == 'PARTIAL' %}Partial · {{ row.remaining_amount|cop }} left
               {%- else %}Open{% endif -%}
             {%- endif -%}

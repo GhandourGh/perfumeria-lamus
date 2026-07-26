@@ -694,7 +694,14 @@ body[data-section="vendor"] .identity-seal {
 .badge-settled::before { background: var(--laurel); }
 .badge-partial { background: var(--amber-wash); border-color: #dcc386; color: var(--amber-ink); }
 .badge-partial::before { background: #b08624; }
+.badge-overdue {
+  color: var(--surface-raised);
+  background: var(--garnet-deep);
+  border-color: var(--garnet-deep);
+}
+.badge-overdue::before { background: var(--surface-raised); }
 .badge-neutral { color: var(--muted); }
+.row-overdue { color: var(--garnet-deep); font-weight: 700; }
 
 .amount { font-variant-numeric: lining-nums tabular-nums; font-weight: 650; white-space: nowrap; }
 .amount-due { color: var(--garnet-deep); }
