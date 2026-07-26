@@ -1,105 +1,52 @@
 {% extends "base.html" %}
-{% block title %}Backup & Recovery · Perfumería Lamus{% endblock %}
+{% block title %}Restore · Perfumería Lamus{% endblock %}
 {% block content %}
 <section class="page-head">
   <div>
     <p class="eyebrow">OWNER SETTINGS · {{ today_display|upper }}</p>
     <h1>Backup & recovery</h1>
-    <p class="page-subtitle">Keep an encrypted copy here and send one private copy by email each day.</p>
+    <p class="page-subtitle">A complete daily copy of the store records is kept on this laptop.</p>
   </div>
-  <form method="post">
-    <input type="hidden" name="action" value="backup">
-    <button class="btn btn-dark" type="submit"><i data-lucide="database-backup" aria-hidden="true"></i>Back up now</button>
+  <form action="{{ url_for('download_backup') }}" method="post">
+    <button class="btn btn-dark" type="submit"><i data-lucide="download" aria-hidden="true"></i>Backup now</button>
   </form>
 </section>
 
-<section class="grid grid-3 backup-status" aria-label="Backup status">
+<section class="grid grid-2 backup-summary">
   <article class="stat">
-    <span class="stat-label">Daily backup</span>
-    <strong class="stat-value stat-value-small">{{ "On" if backup.enabled else "Off" }}</strong>
-    <span class="stat-note">{{ backup.last_backup|replace("T", " · ") if backup.last_backup else "No backup yet" }}</span>
+    <span class="stat-label">Automatic backup</span>
+    <strong class="stat-value stat-value-small">Every day</strong>
+    <span class="stat-note">{{ backup.last_backup_at|replace("T", " · ") if backup.last_backup_at else "Starts automatically while Lamus is running" }}</span>
   </article>
   <article class="stat">
-    <span class="stat-label">Email delivery</span>
-    <strong class="stat-value stat-value-small">{{ "Ready" if backup.password_saved else "Not connected" }}</strong>
-    <span class="stat-note">{{ backup.recipient_email or "No receiving email yet" }}</span>
-  </article>
-  <article class="stat">
-    <span class="stat-label">Safe copies</span>
-    <strong class="stat-value stat-value-small">{{ backup.backup_count }}</strong>
-    <span class="stat-note">Encrypted backups on this computer</span>
+    <span class="stat-label">Saved on this laptop</span>
+    <strong class="stat-value stat-value-small">{{ backup.backup_count }} {{ "copy" if backup.backup_count == 1 else "copies" }}</strong>
+    <span class="stat-note backup-folder">{{ backup.folder }}</span>
   </article>
 </section>
 
 {% if backup.last_error %}
-<div class="backup-alert" role="alert"><i data-lucide="alert-circle" aria-hidden="true"></i><span><strong>Last backup needs attention.</strong> {{ backup.last_error }}</span></div>
+<div class="backup-alert" role="alert"><i data-lucide="alert-circle" aria-hidden="true"></i><span><strong>Automatic backup needs attention.</strong> {{ backup.last_error }}</span></div>
 {% endif %}
-
-<div class="grid grid-2 backup-grid">
-  <section class="panel">
-    <div class="panel-head">
-      <div><p class="eyebrow">STEP 1</p><h2>Daily email</h2></div>
-      <span class="status-badge {{ 'settled' if backup.enabled else 'due' }}">{{ "Active" if backup.enabled else "Off" }}</span>
-    </div>
-    <form method="post" class="stack">
-      <input type="hidden" name="action" value="save">
-      <label class="field">
-        <span>Store owner’s Gmail</span>
-        <input type="email" name="sender_email" value="{{ backup.sender_email }}" placeholder="store@gmail.com" autocomplete="email" required>
-      </label>
-      <label class="field">
-        <span>Where should backups arrive?</span>
-        <input type="email" name="recipient_email" value="{{ backup.recipient_email }}" placeholder="owner@example.com" required>
-      </label>
-      <label class="field">
-        <span>Google app password</span>
-        <input type="password" name="app_password" placeholder="{{ 'Saved — leave blank to keep it' if backup.password_saved else '16-character app password' }}" autocomplete="new-password">
-        <small>Not the owner’s normal Gmail password. It stays in this computer’s secure keychain.</small>
-      </label>
-      <label class="check-row">
-        <input type="checkbox" name="enabled" value="1" {% if backup.enabled %}checked{% endif %}>
-        <span><strong>Send one encrypted backup every day</strong><small>The app sends a missed backup when it is next opened.</small></span>
-      </label>
-      <button class="btn btn-dark" type="submit">Save settings</button>
-    </form>
-    <form method="post" class="backup-test-form">
-      <input type="hidden" name="action" value="test">
-      <button class="btn btn-outline" type="submit"><i data-lucide="send" aria-hidden="true"></i>Send a test backup</button>
-    </form>
-  </section>
-
-  <section class="panel">
-    <div class="panel-head"><div><p class="eyebrow">STEP 2</p><h2>Recovery key</h2></div><i data-lucide="key-round" aria-hidden="true"></i></div>
-    <p class="muted">Save this key somewhere separate, such as a USB drive. An emailed backup cannot be opened without it.</p>
-    <label class="field">
-      <span>Your recovery key</span>
-      <textarea readonly rows="3" class="recovery-key">{{ backup.recovery_key }}</textarea>
-    </label>
-    <p class="privacy-note"><i data-lucide="shield-check" aria-hidden="true"></i>This key is never included in backup emails.</p>
-  </section>
-</div>
 
 <section class="panel restore-panel">
   <div class="panel-head">
-    <div><p class="eyebrow">EMERGENCY USE ONLY</p><h2>Restore from a backup</h2></div>
+    <div><p class="eyebrow">FULL RESTORE</p><h2>Restore all store records</h2></div>
     <i data-lucide="history" aria-hidden="true"></i>
   </div>
-  <p class="muted">Restoring replaces the current records. Lamus makes one final safety backup first and checks the uploaded file before using it.</p>
+  <p class="muted">This restores customers, vendors, every ledger entry, payments, bank history, users, and audit records. Lamus checks the file and saves the current records before replacing them.</p>
   <form method="post" enctype="multipart/form-data" class="restore-form">
     <input type="hidden" name="action" value="restore">
     <label class="field">
-      <span>Backup file</span>
+      <span>Choose backup file</span>
       <input type="file" name="backup_file" accept=".lamusbackup" required>
     </label>
     <label class="field">
-      <span>Recovery key</span>
-      <input type="password" name="recovery_key" required autocomplete="off">
-    </label>
-    <label class="field">
       <span>Type RESTORE to confirm</span>
-      <input type="text" name="confirmation" required autocomplete="off">
+      <input type="text" name="confirmation" required autocomplete="off" aria-describedby="restore-help">
+      <small id="restore-help">Use capital letters exactly as shown.</small>
     </label>
-    <button class="btn btn-danger" type="submit"><i data-lucide="rotate-ccw" aria-hidden="true"></i>Restore records</button>
+    <button class="btn btn-danger" type="submit"><i data-lucide="rotate-ccw" aria-hidden="true"></i>Restore everything</button>
   </form>
 </section>
 {% endblock %}
