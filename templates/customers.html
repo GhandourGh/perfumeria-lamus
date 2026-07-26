@@ -90,9 +90,9 @@
         </a>
       </div>
 
-      {% if customer.notes %}
-      <p class="customer-card-note"><strong>Note:</strong> {{ customer.notes|truncate(74) }}</p>
-      {% endif %}
+      <p class="customer-card-note">
+        <strong>Note:</strong> {{ customer.notes|truncate(74) if customer.notes else 'No note' }}
+      </p>
     </article>
     {% endfor %}
   </div>

@@ -86,6 +86,10 @@
           <i data-lucide="book-open" aria-hidden="true"></i>Open account
         </a>
       </div>
+
+      <p class="customer-card-note">
+        <strong>Note:</strong> {{ customer.notes|truncate(74) if customer.notes else 'No note' }}
+      </p>
     </article>
     {% endfor %}
   </div>
