@@ -31,63 +31,89 @@
     <label class="field" style="margin-left:auto; min-width: 190px">
       <span class="sr-only">Sort customers</span>
       <select data-registry-sort aria-label="Sort customers">
-        <option value="name">Sort: Name A–Z</option>
         <option value="balance-desc">Sort: Largest balance</option>
+        <option value="name">Sort: Name A–Z</option>
         <option value="recent">Sort: Recently active</option>
         <option value="newest">Sort: Recently added</option>
       </select>
     </label>
   </div>
 
-  <div class="table-scroll">
-    <table class="table table-stack" data-registry>
-      <thead>
-        <tr>
-          <th scope="col">Customer</th>
-          <th scope="col">Status</th>
-          <th scope="col" class="num">Credit taken</th>
-          <th scope="col" class="num">Paid</th>
-          <th scope="col" class="num">Balance due</th>
-          <th scope="col">Last payment</th>
-          <th scope="col"><span class="sr-only">Actions</span></th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for customer in customers %}
-        <tr data-row
-            data-search="{{ (customer.name ~ ' ' ~ (customer.phone or '') ~ ' ' ~ (customer.notes or ''))|lower }}"
-            data-name="{{ customer.name|lower }}"
-            data-balance="{{ customer.balance }}"
-            data-lastpay="{{ customer.last_payment_at or '' }}"
-            data-lastactivity="{{ customer.last_activity_at or '' }}"
-            data-created="{{ customer.created_at or '' }}">
-          <td data-th="Customer">
-            <a class="row-link" href="{{ url_for('customer_detail', customer_id=customer.id) }}">
-              <span class="row-title">{{ customer.name }}</span>
-            </a>
-            <div class="row-sub">{{ customer.phone or 'No phone on file' }}{% if customer.notes %} · {{ customer.notes|truncate(46) }}{% endif %}</div>
-          </td>
-          <td data-th="Status">{{ ui.account_badge(customer.balance) }}</td>
-          <td data-th="Credit taken" class="num"><span class="amount amount-muted">{{ customer.total_debt|cop }}</span></td>
-          <td data-th="Paid" class="num"><span class="amount amount-muted">{{ customer.total_paid|cop }}</span></td>
-          <td data-th="Balance due" class="num">
-            <span class="amount {% if customer.balance > 0 %}amount-due{% else %}amount-muted{% endif %}">{{ customer.balance|cop }}</span>
-          </td>
-          <td data-th="Last payment">
-            {% if customer.last_payment_at %}{{ customer.last_payment_at|day }}{% else %}<span class="muted">—</span>{% endif %}
-          </td>
-          <td data-th="">
-            <div class="row-actions">
-              {% if customer.balance > 0 %}<a class="btn btn-sm btn-gold" href="{{ url_for('customer_detail', customer_id=customer.id, action='pay') }}"><i data-lucide="hand-coins"></i>Payment</a>{% endif %}
-              <a class="btn btn-sm btn-primary" href="{{ url_for('customer_detail', customer_id=customer.id) }}"><i data-lucide="book-open"></i>Open</a>
-              <a class="btn btn-sm" href="{{ url_for('customer_report', customer_id=customer.id) }}"><i data-lucide="printer"></i>Statement</a>
-              <a class="btn btn-sm btn-ghost" href="{{ url_for('edit_customer', customer_id=customer.id) }}" aria-label="Edit {{ customer.name }}"><i data-lucide="pencil"></i></a>
-            </div>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  <div class="customer-card-grid customer-card-grid-registry" data-registry aria-label="Customer accounts">
+    {% for customer in customers %}
+    <article class="customer-card customer-card-detailed"
+             data-row
+             data-search="{{ (customer.name ~ ' ' ~ (customer.phone or '') ~ ' ' ~ (customer.notes or ''))|lower }}"
+             data-name="{{ customer.name|lower }}"
+             data-balance="{{ customer.balance }}"
+             data-lastpay="{{ customer.last_payment_at or '' }}"
+             data-lastactivity="{{ customer.last_activity_at or '' }}"
+             data-created="{{ customer.created_at or '' }}"
+             aria-labelledby="registry-customer-{{ customer.id }}-name">
+      <div class="customer-card-head">
+        <div class="customer-card-identity">
+          <a class="customer-card-name"
+             id="registry-customer-{{ customer.id }}-name"
+             href="{{ url_for('customer_detail', customer_id=customer.id) }}">
+            {{ customer.name }}
+          </a>
+          <span class="customer-card-phone">
+            <i data-lucide="phone" aria-hidden="true"></i>
+            {{ customer.phone or 'No phone on file' }}
+          </span>
+        </div>
+        {{ ui.account_badge(customer.balance) }}
+      </div>
+
+      {% if customer.notes %}
+      <p class="customer-card-note">{{ customer.notes|truncate(74) }}</p>
+      {% endif %}
+
+      <div class="customer-card-balance">
+        <span>Balance due</span>
+        <strong class="amount {% if customer.balance > 0 %}amount-due{% else %}amount-muted{% endif %}">
+          {{ customer.balance|cop }}
+        </strong>
+      </div>
+
+      <dl class="customer-card-facts">
+        <div>
+          <dt>Credit taken</dt>
+          <dd>{{ customer.total_debt|cop }}</dd>
+        </div>
+        <div>
+          <dt>Paid</dt>
+          <dd>{{ customer.total_paid|cop }}</dd>
+        </div>
+        <div>
+          <dt>Last payment</dt>
+          <dd>{% if customer.last_payment_at %}{{ customer.last_payment_at|day }}{% else %}—{% endif %}</dd>
+        </div>
+      </dl>
+
+      <div class="customer-card-actions customer-card-actions-detailed">
+        {% if customer.balance > 0 %}
+        <a class="btn btn-sm btn-gold"
+           href="{{ url_for('customer_detail', customer_id=customer.id, action='pay') }}">
+          <i data-lucide="hand-coins" aria-hidden="true"></i>Payment
+        </a>
+        {% endif %}
+        <a class="btn btn-sm btn-primary"
+           href="{{ url_for('customer_detail', customer_id=customer.id) }}">
+          <i data-lucide="book-open" aria-hidden="true"></i>Open
+        </a>
+        <a class="btn btn-sm"
+           href="{{ url_for('customer_report', customer_id=customer.id) }}">
+          <i data-lucide="printer" aria-hidden="true"></i>Statement
+        </a>
+        <a class="btn btn-sm btn-ghost"
+           href="{{ url_for('edit_customer', customer_id=customer.id) }}"
+           aria-label="Edit {{ customer.name }}">
+          <i data-lucide="pencil" aria-hidden="true"></i>
+        </a>
+      </div>
+    </article>
+    {% endfor %}
   </div>
 
   {% if customers %}

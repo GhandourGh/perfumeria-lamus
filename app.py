@@ -169,11 +169,16 @@ def reset_password():
 @app.route("/")
 @login_required
 def dashboard():
+    customers = sorted(
+        db.get_customers_overview(),
+        key=lambda customer: customer["balance"],
+        reverse=True,
+    )
     return render_template(
         "dashboard.html",
         stats=db.get_dashboard_stats(),
         recent_activity=db.get_recent_activity(limit=10),
-        customers=db.get_customers_overview(),
+        customers=customers,
     )
 
 
@@ -221,7 +226,12 @@ def vendor_report(vendor_id):
 @app.route("/customers")
 @login_required
 def customers():
-    return render_template("customers.html", customers=db.get_customers_overview())
+    customer_list = sorted(
+        db.get_customers_overview(),
+        key=lambda customer: customer["balance"],
+        reverse=True,
+    )
+    return render_template("customers.html", customers=customer_list)
 
 
 @app.route("/customers/add", methods=["GET", "POST"])
