@@ -15,7 +15,7 @@
 </header>
 
 <section class="grid grid-split">
-  <div style="display: grid; gap: var(--space-4); align-content: start">
+  <div class="stack">
     <div class="stat stat-accent">
       <div class="stat-label">Current balance</div>
       <div class="stat-value">{{ balance|cop }}</div>
@@ -43,7 +43,7 @@
           <textarea name="note" rows="2" placeholder="What is this movement for?"></textarea>
           <span class="field-help">A note is required when taking money out.</span>
         </label>
-        <p class="field-help" data-overdraw-warning hidden style="color: var(--garnet)">
+        <p class="field-help text-danger" data-overdraw-warning hidden>
           <strong>Heads up:</strong> this is more than the current balance — the account will go negative. You'll be asked to confirm.
         </p>
         <button class="btn btn-primary" type="submit"><i data-lucide="landmark"></i>Record movement</button>
@@ -72,7 +72,7 @@
           {% for row in history %}
           <tr>
             <td data-th="Date">
-              <span class="amount amount-muted" style="font-weight:500">{{ row.created_at|day }}</span>
+              <span class="amount amount-muted amount-soft">{{ row.created_at|day }}</span>
               <div class="row-sub">{{ row.created_at|clock }}</div>
             </td>
             <td data-th="Action">

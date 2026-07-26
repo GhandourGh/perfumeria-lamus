@@ -21,7 +21,7 @@
   </div>
 </header>
 
-<section class="panel" style="max-width: 640px">
+<section class="panel panel-narrow">
   <form class="form-grid" method="post" action="{{ action }}" data-guard data-warn-unsaved>
     <div class="form-row">
       <label class="field">
@@ -62,10 +62,10 @@
 </section>
 
 {% if mode == 'Edit' %}
-<section class="panel" style="max-width: 640px; margin-top: var(--space-5)">
+<section class="panel panel-narrow mt-6">
   <div class="panel-head"><h2>Archive this {{ kind|lower }}</h2></div>
   <p class="muted small">Hides {{ person.name }} from the {{ 'customers' if kind == 'Customer' else 'vendors' }} list and overviews. The ledger history is kept — nothing is deleted.</p>
-  <div class="page-actions" style="margin-top: var(--space-4)">
+  <div class="page-actions mt-4">
     <button class="btn btn-danger" type="button" data-open-sheet="sheet-archive"><i data-lucide="archive"></i>Archive {{ kind|lower }}</button>
   </div>
 </section>

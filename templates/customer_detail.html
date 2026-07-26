@@ -53,7 +53,7 @@
 {% include "_ledger_table.html" %}
 
 {% if customer.notes %}
-<section class="panel" style="margin-top: var(--space-5)">
+<section class="panel mt-6">
   <div class="panel-head"><h2>Notes</h2></div>
   <p class="muted">{{ customer.notes }}</p>
 </section>
@@ -142,7 +142,7 @@
         <div class="preview-line"><span>This payment</span><strong data-preview-entry>$0</strong></div>
         <div class="preview-line preview-result"><span>Remaining balance</span><strong data-preview-result>{{ balance|cop }}</strong></div>
       </div>
-      <p class="field-help" data-preview-warning hidden style="color: var(--garnet)">
+      <p class="field-help text-danger" data-preview-warning hidden>
         <strong>This payment is larger than the balance due.</strong> Reduce the amount.
       </p>
     </div>

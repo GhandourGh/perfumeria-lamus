@@ -11,6 +11,7 @@ from werkzeug.security import check_password_hash
 
 import backup_manager
 import database as db
+import i18n
 import report_manager
 import security_manager
 
@@ -56,6 +57,17 @@ def csrf_token():
 app.jinja_env.globals["csrf_token"] = csrf_token
 
 
+def current_locale():
+    return session.get("locale", i18n.DEFAULT_LOCALE)
+
+
+def tr(value):
+    return i18n.translate_text(value, current_locale())
+
+
+app.jinja_env.globals["tr"] = tr
+
+
 @app.before_request
 def security_checks():
     if request.method == "POST":
@@ -86,6 +98,13 @@ def security_headers(response):
     return response
 
 
+@app.after_request
+def localize_response(response):
+    if response.mimetype == "text/html":
+        response.set_data(i18n.localize_html(response.get_data(as_text=True), current_locale()))
+    return response
+
+
 @app.errorhandler(413)
 def upload_too_large(_error):
     flash("That file is too large. Choose a Lamus backup under 25 MB.", "error")
@@ -99,10 +118,17 @@ def safe_next_url(value):
     return value if not target.scheme and not target.netloc and value.startswith("/") else None
 
 
+@app.route("/language/<locale>", methods=["POST"])
+def set_language(locale):
+    if locale not in i18n.SUPPORTED_LOCALES:
+        abort(404)
+    session["locale"] = locale
+    target = urlsplit(request.referrer or "")
+    return redirect(target.path if target.path.startswith("/") else url_for("dashboard"))
+
+
 def format_cop(amount):
-    value = int(round(float(amount or 0)))
-    sign = "-" if value < 0 else ""
-    return f"{sign}${abs(value):,}".replace(",", ".")
+    return i18n.format_cop(amount, current_locale())
 
 
 def _parse_stored_dt(value):
@@ -117,13 +143,11 @@ def _parse_stored_dt(value):
 
 
 def format_date(value):
-    dt = _parse_stored_dt(value)
-    return dt.strftime("%d %b %Y") if dt else (value or "—")
+    return i18n.format_day(value, current_locale())
 
 
 def format_datetime(value):
-    dt = _parse_stored_dt(value)
-    return dt.strftime("%d %b %Y · %H:%M") if dt else (value or "—")
+    return i18n.format_moment(value, current_locale())
 
 
 def format_time(value):
@@ -161,8 +185,10 @@ def inject_globals():
     endpoint = request.endpoint
     return {
         "current_user": user,
-        "today_display": datetime.now().strftime("%d %b %Y"),
-        "now_display": datetime.now().strftime("%d %b %Y · %H:%M"),
+        "today_display": i18n.format_day(datetime.now(), current_locale()),
+        "now_display": i18n.format_moment(datetime.now(), current_locale()),
+        "current_locale": current_locale(),
+        "supported_locales": i18n.SUPPORTED_LOCALES,
         "workspace": resolve_workspace(endpoint),
         "nav_office": endpoint in OFFICE_ENDPOINTS,
     }
@@ -191,7 +217,9 @@ def login():
         if user:
             _login_attempts.pop(key, None)
             db.log_audit(user["id"], "LOGIN", "users", user["id"])
+            selected_locale = current_locale()
             session.clear()
+            session["locale"] = selected_locale
             session.permanent = True
             session["user_id"] = user["id"]
             session["username"] = user["username"]
@@ -209,7 +237,9 @@ def logout():
     user_id = current_user_id()
     if user_id:
         db.log_audit(user_id, "LOGOUT", "users", user_id)
+    selected_locale = current_locale()
     session.clear()
+    session["locale"] = selected_locale
     return redirect(url_for("login"))
 
 
@@ -332,7 +362,11 @@ def report_actions_csv():
         request.args.get("action", ""),
     )
     return Response(
-        report_manager.actions_csv(events),
+        report_manager.actions_csv(
+            events,
+            lambda value: i18n.translate_text(value, current_locale()),
+            lambda value: i18n.format_moment(value, current_locale()),
+        ),
         mimetype="text/csv",
         headers={"Content-Disposition": "attachment; filename=lamus-owner-actions.csv"},
     )
@@ -623,7 +657,8 @@ def backups():
         try:
             action = request.form.get("action")
             if action == "restore":
-                if request.form.get("confirmation") != "RESTORE":
+                accepted = {"RESTORE", "RESTAURAR"} if current_locale() == "es_CO" else {"RESTORE"}
+                if (request.form.get("confirmation") or "").strip().upper() not in accepted:
                     raise ValueError("Type RESTORE exactly to confirm.")
                 backup_manager.restore_backup(request.files.get("backup_file"))
                 db.log_audit(current_user_id(), "RESTORE_COMPLETED", "database", None)

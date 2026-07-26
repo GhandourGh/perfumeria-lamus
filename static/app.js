@@ -7,10 +7,21 @@
 
   /* ---------- Currency ---------- */
 
+  var localeMeta = document.querySelector('meta[name="app-locale"]');
+  var appLocale = localeMeta ? localeMeta.content : "es-CO";
+
+  function translatedMeta(name, fallback) {
+    var element = document.querySelector('meta[name="' + name + '"]');
+    return element ? element.content : fallback;
+  }
+
   function formatCOP(value) {
     var n = Math.round(Number(value) || 0);
-    var sign = n < 0 ? "-" : "";
-    return sign + "$" + Math.abs(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    return new Intl.NumberFormat(appLocale, {
+      style: "currency",
+      currency: "COP",
+      maximumFractionDigits: 0
+    }).format(n);
   }
 
   /* ---------- Icons ---------- */
@@ -259,7 +270,9 @@
       button.setAttribute("aria-expanded", expanded ? "false" : "true");
       grid.classList.toggle("is-expanded", !expanded);
       var label = button.querySelector("[data-expand-label]");
-      if (label) label.textContent = expanded ? "Show all" : "Show less";
+      if (label) label.textContent = expanded
+        ? translatedMeta("i18n-show-all", "Show all")
+        : translatedMeta("i18n-show-less", "Show less");
       if (expanded) button.scrollIntoView({ block: "nearest" });
     });
   });
@@ -274,7 +287,9 @@
       button.setAttribute("aria-expanded", expanded ? "false" : "true");
       panel.classList.toggle("is-expanded", !expanded);
       var label = button.querySelector("[data-expand-label]");
-      if (label) label.textContent = expanded ? "Expand" : "Collapse";
+      if (label) label.textContent = expanded
+        ? translatedMeta("i18n-expand", "Expand")
+        : translatedMeta("i18n-collapse", "Collapse");
       if (expanded) panel.scrollTop = 0;
     });
   });
@@ -302,7 +317,7 @@
         form.reset();
         form.action = button.dataset.action;
         form.dataset.confirmed = "false";
-        form.dataset.entryLabel = button.dataset.entryLabel || "Ledger entry";
+        form.dataset.entryLabel = button.dataset.entryLabel || translatedMeta("i18n-ledger-entry", "Ledger entry");
         amount.value = button.dataset.amount || "";
         description.value = button.dataset.description || "";
         notes.value = button.dataset.notes || "";
@@ -321,7 +336,7 @@
       event.preventDefault();
       var label = confirmDialog.querySelector("[data-confirm-entry-label]");
       var value = confirmDialog.querySelector("[data-confirm-entry-amount]");
-      if (label) label.textContent = form.dataset.entryLabel || "Ledger entry";
+      if (label) label.textContent = form.dataset.entryLabel || translatedMeta("i18n-ledger-entry", "Ledger entry");
       if (value) value.textContent = formatCOP(amount.value);
       confirmDialog.showModal();
       var confirmButton = confirmDialog.querySelector("[data-confirm-ledger-edit]");
@@ -394,7 +409,11 @@
     form.addEventListener("submit", function (e) {
       if (overdraw()) {
         var next = balance - (Number(amount.value) || 0);
-        if (!window.confirm("This will take the bank balance to " + formatCOP(next) + ". Record it anyway?")) {
+        var confirmTemplate = translatedMeta(
+          "i18n-bank-confirm",
+          "This will take the bank balance to {amount}. Record it anyway?"
+        );
+        if (!window.confirm(confirmTemplate.replace("{amount}", formatCOP(next)))) {
           e.preventDefault();
           e.stopImmediatePropagation();
           form.dataset.submitted = "";

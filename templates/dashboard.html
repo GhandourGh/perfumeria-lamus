@@ -34,7 +34,7 @@
   </div>
 </section>
 
-<section class="panel" style="margin-top: var(--space-5)" aria-label="Find a customer">
+<section class="panel mt-6" aria-label="Find a customer">
   <div class="panel-head">
     <h2>Find a customer</h2>
     <div class="panel-head-actions">
@@ -120,7 +120,7 @@
   {% endif %}
 </section>
 
-<section class="grid grid-2" style="margin-top: var(--space-5)">
+<section class="grid grid-2 mt-6">
   <div class="panel" aria-label="Recent activity">
     <div class="panel-head">
       <h2>Recent activity</h2>
@@ -199,7 +199,7 @@
   </div>
 </section>
 
-<section style="margin-top: var(--space-5)">
+<section class="mt-6">
   <div class="panel" aria-label="House accounts">
     <div class="panel-head">
       <h2>House accounts</h2>
@@ -215,7 +215,7 @@
         <div class="stat-value {% if stats.total_payable > 0 %}is-due{% endif %}">{{ stats.total_payable|cop }}</div>
       </div>
     </div>
-    <div class="page-actions" style="margin-top: var(--space-4)">
+    <div class="page-actions mt-4">
       <a class="btn" href="{{ url_for('bank') }}"><i data-lucide="landmark"></i>Bank movements</a>
       <a class="btn" href="{{ url_for('vendors') }}"><i data-lucide="package"></i>Vendor accounts</a>
     </div>

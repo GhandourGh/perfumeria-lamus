@@ -1,15 +1,23 @@
 <!doctype html>
-<html lang="en">
+<html lang="{{ 'es-CO' if current_locale == 'es_CO' else 'en' }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="csrf-token" content="{{ csrf_token() }}">
+  <meta name="app-locale" content="{{ current_locale.replace('_', '-') }}">
   <title>{% block title %}Perfumería Lamus{% endblock %}</title>
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <script src="{{ url_for('static', filename='vendor/lucide/lucide.min.js') }}" defer></script>
 </head>
 <body>
+  <div class="auth-language" aria-label="{{ tr('Language') }}">
+    {% for locale_code, locale_name in supported_locales.items() %}
+    <form action="{{ url_for('set_language', locale=locale_code) }}" method="post">
+      <button class="{% if current_locale == locale_code %}active{% endif %}" type="submit">{{ locale_name }}</button>
+    </form>
+    {% endfor %}
+  </div>
   <div class="auth-page">
     <aside class="auth-aside">
       <div class="auth-stage">

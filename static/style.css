@@ -1928,6 +1928,54 @@ dialog.sheet[open] { animation: sheet-in .22s ease both; }
   font-weight: 800;
 }
 .nav-account-panel { right: 0; left: auto; }
+.language-menu {
+  margin: 6px 4px;
+  padding: 8px;
+  border-block: 1px solid var(--hairline);
+}
+.language-menu > span {
+  padding: 4px 8px 7px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.language-menu form { margin: 0; }
+.language-menu button.active {
+  color: var(--gold-deep);
+  background: var(--gold-wash);
+  font-weight: 800;
+}
+.auth-language {
+  position: fixed;
+  z-index: 10;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--surface-raised);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-soft);
+}
+.auth-language form { margin: 0; }
+.auth-language button {
+  padding: 8px 12px;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+}
+.auth-language button.active {
+  color: var(--ink);
+  background: var(--gold-wash);
+}
 
 @media (max-width: 1080px) {
   body.nav-open .topnav-links { gap: 5px; }

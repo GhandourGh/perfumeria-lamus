@@ -1,9 +1,16 @@
 <!doctype html>
-<html lang="en">
+<html lang="{{ 'es-CO' if current_locale == 'es_CO' else 'en' }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="csrf-token" content="{{ csrf_token() }}">
+  <meta name="app-locale" content="{{ current_locale.replace('_', '-') }}">
+  <meta name="i18n-show-all" content="{{ tr('Show all') }}">
+  <meta name="i18n-show-less" content="{{ tr('Show less') }}">
+  <meta name="i18n-expand" content="{{ tr('Expand') }}">
+  <meta name="i18n-collapse" content="{{ tr('Collapse') }}">
+  <meta name="i18n-ledger-entry" content="{{ tr('Ledger entry') }}">
+  <meta name="i18n-bank-confirm" content="{{ tr('This will take the bank balance to {amount}. Record it anyway?') }}">
   <title>{% block title %}Perfumería Lamus{% endblock %}</title>
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
@@ -69,6 +76,14 @@
         </summary>
         <div class="nav-menu-panel nav-account-panel">
           <a href="{{ url_for('security') }}"><i data-lucide="settings" aria-hidden="true"></i><span><strong>Account settings</strong></span></a>
+          <div class="language-menu" aria-label="{{ tr('Language') }}">
+            <span>{{ tr('Language') }}</span>
+            {% for locale_code, locale_name in supported_locales.items() %}
+            <form action="{{ url_for('set_language', locale=locale_code) }}" method="post">
+              <button class="{% if current_locale == locale_code %}active{% endif %}" type="submit">{{ locale_name }}</button>
+            </form>
+            {% endfor %}
+          </div>
           <form action="{{ url_for('logout') }}" method="post">
             <button type="submit"><i data-lucide="log-out" aria-hidden="true"></i><span><strong>Sign out</strong></span></button>
           </form>

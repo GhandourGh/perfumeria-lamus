@@ -88,18 +88,18 @@ def get_owner_stats(user_id):
     return dict(row)
 
 
-def actions_csv(events):
+def actions_csv(events, translate=lambda value: value, format_moment=lambda value: value):
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(["Date", "Owner", "Action", "Account", "Record type", "Record ID", "Details"])
+    writer.writerow([translate(label) for label in ["Date", "Owner", "Action", "Account", "Record type", "Record ID", "Details"]])
     for event in events:
         writer.writerow([
-            event["created_at"],
+            format_moment(event["created_at"]),
             event["owner_name"],
-            event["action_label"],
+            translate(event["action_label"]),
             event.get("account_name") or "",
-            event.get("table_name") or "",
+            translate(event.get("table_name") or ""),
             event.get("record_id") or "",
-            event.get("new_values") or "",
+            translate(event.get("new_values") or ""),
         ])
     return output.getvalue()

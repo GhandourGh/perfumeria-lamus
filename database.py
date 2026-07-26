@@ -386,6 +386,31 @@ def add_payment(customer_id, amount, payment_method="CASH", notes=None, user_id=
         return ledger_id
 
 
+def add_customer_writeoff(customer_id, amount, notes=None, user_id=None):
+    """Reduce a customer's balance without money changing hands — a discount,
+    a write-off, or forgiving a bad debt. Recorded as WRITE_OFF (excluded from
+    'collected today') and applied to the oldest debts first, like a payment."""
+    amount = float(amount)
+    current = get_customer_balance(customer_id)
+    if amount <= 0:
+        raise ValueError("Amount must be positive")
+    if current <= 0:
+        raise ValueError("This account has no balance to reduce")
+    if amount > current:
+        raise ValueError("That is more than the current balance")
+    with get_db() as conn:
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO ledger (customer_id, entry_type, amount, balance_after, notes, created_by, created_at)
+            VALUES (?, 'WRITE_OFF', ?, ?, ?, ?, ?)
+        """, (customer_id, amount, current - amount, notes, user_id, now()))
+        ledger_id = cur.lastrowid
+        _apply_fifo_for_payment(cur, customer_id, amount)
+        log_audit(user_id, "CUSTOMER_WRITEOFF", "ledger", ledger_id, f"Amount: {amount}", conn)
+        conn.commit()
+        return ledger_id
+
+
 def get_customer_ledger(customer_id):
     with get_db() as conn:
         rows = [dict(r) for r in conn.execute("""
@@ -429,7 +454,7 @@ def _recompute_customer_ledger(cur, customer_id):
     """, (customer_id,))
     payments = cur.execute("""
         SELECT amount FROM ledger
-        WHERE customer_id = ? AND entry_type = 'PAYMENT'
+        WHERE customer_id = ? AND entry_type IN ('PAYMENT', 'WRITE_OFF', 'REFUND')
           AND is_voided = 0 AND is_deleted = 0
         ORDER BY created_at ASC, id ASC
     """, (customer_id,)).fetchall()
@@ -619,6 +644,31 @@ def add_vendor_payment(vendor_id, amount, payment_method="CASH", notes=None, use
         return ledger_id
 
 
+def add_vendor_credit(vendor_id, amount, notes=None, user_id=None):
+    """Reduce what the store owes a vendor without paying — a returned order or a
+    supplier credit note. Recorded as REFUND and applied to the oldest purchases
+    first. Does not touch the bank."""
+    amount = float(amount)
+    current = get_vendor_balance(vendor_id)
+    if amount <= 0:
+        raise ValueError("Amount must be positive")
+    if current <= 0:
+        raise ValueError("Nothing is payable to reduce")
+    if amount > current:
+        raise ValueError("That is more than the current payable")
+    with get_db() as conn:
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO vendor_ledger (vendor_id, entry_type, amount, balance_after, notes, created_by, created_at)
+            VALUES (?, 'REFUND', ?, ?, ?, ?, ?)
+        """, (vendor_id, amount, current - amount, notes, user_id, now()))
+        ledger_id = cur.lastrowid
+        _apply_fifo_for_vendor_payment(cur, vendor_id, amount)
+        log_audit(user_id, "VENDOR_CREDIT", "vendor_ledger", ledger_id, f"Amount: {amount}", conn)
+        conn.commit()
+        return ledger_id
+
+
 def get_vendor_ledger(vendor_id):
     with get_db() as conn:
         rows = [dict(r) for r in conn.execute("""
@@ -640,7 +690,7 @@ def _recompute_vendor_ledger(cur, vendor_id):
     """, (vendor_id,))
     payments = cur.execute("""
         SELECT amount FROM vendor_ledger
-        WHERE vendor_id = ? AND entry_type = 'PAYMENT_MADE'
+        WHERE vendor_id = ? AND entry_type IN ('PAYMENT_MADE', 'REFUND')
           AND is_voided = 0 AND is_deleted = 0
         ORDER BY created_at ASC, id ASC
     """, (vendor_id,)).fetchall()

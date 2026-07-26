@@ -2,3 +2,5 @@ flask
 pytest
 cryptography
 waitress
+Babel
+beautifulsoup4

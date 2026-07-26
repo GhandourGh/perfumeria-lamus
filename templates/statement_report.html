@@ -84,7 +84,7 @@
       <tbody>
         {% for row in ledger|reverse %}
         <tr {% if row.is_voided %}class="voided"{% endif %}>
-          <td style="white-space:nowrap">{{ row.created_at|day }}</td>
+          <td class="nowrap">{{ row.created_at|day }}</td>
           <td class="entry">{{ ui.entry_label(row.entry_type) }}{% if row.is_voided %} (voided){% endif %}
             {% if row.payment_method %}<div class="sub">{{ ui.method_label(row.payment_method) }}</div>{% endif %}
           </td>
