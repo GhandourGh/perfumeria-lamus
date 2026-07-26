@@ -37,7 +37,57 @@
   </div>
 </section>
 
-<section class="panel" style="margin-top: var(--space-5)" aria-label="Customer balances">
+<section class="panel mt-6 owner-report" aria-label="Owner action report">
+  <div class="panel-head">
+    <div>
+      <p class="eyebrow">OWNER REPORT</p>
+      <h2>BU SALIM activity</h2>
+    </div>
+    <div class="owner-report-summary">
+      <span><strong>{{ owner_stats.action_count or 0 }}</strong> recorded actions</span>
+      <span><strong>{{ owner_stats.login_count or 0 }}</strong> sign-ins</span>
+      <span>Last sign-in <strong>{{ owner_stats.last_login|moment if owner_stats.last_login else '—' }}</strong></span>
+    </div>
+  </div>
+
+  <form class="report-filters no-print" method="get">
+    <label class="field"><span>From</span><input type="date" name="date_from" value="{{ date_from }}"></label>
+    <label class="field"><span>To</span><input type="date" name="date_to" value="{{ date_to }}"></label>
+    <label class="field">
+      <span>Action</span>
+      <select name="action">
+        <option value="">All actions</option>
+        {% for action, label in action_labels.items() %}
+        <option value="{{ action }}" {% if action_filter == action %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <button class="btn btn-dark" type="submit"><i data-lucide="list-filter" aria-hidden="true"></i>Apply</button>
+    <a class="btn btn-outline" href="{{ url_for('reports') }}">Clear</a>
+    <a class="btn btn-outline" href="{{ url_for('report_actions_csv', date_from=date_from, date_to=date_to, action=action_filter) }}"><i data-lucide="download" aria-hidden="true"></i>Export CSV</a>
+  </form>
+
+  <div class="table-scroll">
+    <table class="table">
+      <thead><tr><th scope="col">Date</th><th scope="col">Owner</th><th scope="col">Action</th><th scope="col">Account</th><th scope="col">Details</th></tr></thead>
+      <tbody>
+        {% for event in action_events %}
+        <tr>
+          <td class="nowrap">{{ event.created_at|moment }}</td>
+          <td class="row-title">{{ event.owner_name }}</td>
+          <td><span class="action-chip">{{ event.action_label }}</span></td>
+          <td>{{ event.account_name or 'Store / system' }}</td>
+          <td class="muted small">{{ event.new_values or '—' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="empty-cell">No actions match these filters.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel mt-6" aria-label="Customer balances">
   <div class="panel-head panel-head-customer">
     <h2><i data-lucide="users"></i>Customer balances</h2>
     <span class="hint">As of {{ now_display }}</span>
@@ -76,7 +126,7 @@
   </div>
 </section>
 
-<section class="panel" style="margin-top: var(--space-5)" aria-label="Vendor balances">
+<section class="panel mt-6" aria-label="Vendor balances">
   <div class="panel-head panel-head-vendor">
     <h2><i data-lucide="package"></i>Vendor balances</h2>
   </div>
@@ -114,7 +164,7 @@
   </div>
 </section>
 
-<section class="panel" style="margin-top: var(--space-5)" aria-label="Bank history">
+<section class="panel mt-6" aria-label="Bank history">
   <div class="panel-head">
     <h2>Bank history</h2>
     <span class="hint">Last {{ bank_history|length }} movements</span>
@@ -151,7 +201,7 @@
   </div>
 </section>
 
-<section class="panel" style="margin-top: var(--space-5)" aria-label="Recent activity">
+<section class="panel mt-6" aria-label="Recent activity">
   <div class="panel-head">
     <h2>Recent ledger activity</h2>
     <span class="hint">Last {{ recent_activity|length }} entries</span>

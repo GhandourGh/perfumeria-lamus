@@ -6,11 +6,12 @@ from functools import wraps
 from pathlib import Path
 from urllib.parse import urlsplit
 
-from flask import Flask, abort, flash, redirect, render_template, request, send_file, session, url_for
+from flask import Flask, Response, abort, flash, redirect, render_template, request, send_file, session, url_for
 from werkzeug.security import check_password_hash
 
 import backup_manager
 import database as db
+import report_manager
 import security_manager
 
 
@@ -189,6 +190,7 @@ def login():
         user = db.authenticate_user(username, request.form.get("password", ""))
         if user:
             _login_attempts.pop(key, None)
+            db.log_audit(user["id"], "LOGIN", "users", user["id"])
             session.clear()
             session.permanent = True
             session["user_id"] = user["id"]
@@ -204,6 +206,9 @@ def login():
 
 @app.route("/logout", methods=["POST"])
 def logout():
+    user_id = current_user_id()
+    if user_id:
+        db.log_audit(user_id, "LOGOUT", "users", user_id)
     session.clear()
     return redirect(url_for("login"))
 
@@ -239,6 +244,7 @@ def reset_password():
             flash("Passwords do not match.", "error")
         else:
             db.change_password(user_id, password)
+            db.log_audit(user_id, "PASSWORD_RESET", "users", user_id)
             session.pop("pw_reset_allowed_for", None)
             session.pop("pw_reset_expires", None)
             flash("Password updated. Please log in.", "success")
@@ -264,9 +270,11 @@ def security():
                 flash("New passwords do not match.", "error")
             else:
                 db.change_password(user["id"], new_password)
+                db.log_audit(user["id"], "PASSWORD_CHANGED", "users", user["id"])
                 flash("Password changed successfully.", "success")
         elif action == "recovery":
             recovery_code = security_manager.create_recovery_code(user["id"])
+            db.log_audit(user["id"], "RECOVERY_CODE_CREATED", "users", user["id"])
             flash("New recovery code created. Save it now; it will not be shown again.", "success")
     return render_template(
         "security.html",
@@ -294,6 +302,10 @@ def dashboard():
 @app.route("/reports")
 @login_required
 def reports():
+    date_from = request.args.get("date_from", "")
+    date_to = request.args.get("date_to", "")
+    action_filter = request.args.get("action", "")
+    action_events = report_manager.get_action_events(date_from, date_to, action_filter)
     return render_template(
         "reports.html",
         stats=db.get_dashboard_stats(),
@@ -302,6 +314,27 @@ def reports():
         bank_balance=db.get_current_bank_balance(),
         bank_history=db.get_bank_balance_history(limit=200),
         recent_activity=db.get_recent_activity(limit=100),
+        action_events=action_events,
+        action_labels=report_manager.ACTION_LABELS,
+        action_filter=action_filter,
+        date_from=date_from,
+        date_to=date_to,
+        owner_stats=report_manager.get_owner_stats(current_user_id()),
+    )
+
+
+@app.route("/reports/actions.csv")
+@login_required
+def report_actions_csv():
+    events = report_manager.get_action_events(
+        request.args.get("date_from", ""),
+        request.args.get("date_to", ""),
+        request.args.get("action", ""),
+    )
+    return Response(
+        report_manager.actions_csv(events),
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment; filename=lamus-owner-actions.csv"},
     )
 
 
@@ -348,6 +381,7 @@ def customers():
 def add_customer():
     if request.method == "POST":
         new_id = db.add_customer(**person_form(customer=True))
+        db.log_audit(current_user_id(), "ADD_CUSTOMER", "customers", new_id)
         flash("Customer added.", "success")
         _record_opening_balance("customer", new_id)
         return redirect(url_for("customer_detail", customer_id=new_id))
@@ -360,6 +394,7 @@ def edit_customer(customer_id):
     customer = db.get_customer(customer_id)
     if request.method == "POST":
         db.update_customer(customer_id, **person_form(customer=True))
+        db.log_audit(current_user_id(), "EDIT_CUSTOMER", "customers", customer_id)
         flash("Customer updated.", "success")
         return redirect(url_for("customer_detail", customer_id=customer_id))
     return render_template("person_form.html", mode="Edit", kind="Customer", action=url_for("edit_customer", customer_id=customer_id), person=customer)
@@ -478,6 +513,7 @@ def vendors():
 def add_vendor():
     if request.method == "POST":
         new_id = db.add_vendor(**person_form(customer=False))
+        db.log_audit(current_user_id(), "ADD_VENDOR", "vendors", new_id)
         flash("Vendor added.", "success")
         _record_opening_balance("vendor", new_id)
         return redirect(url_for("vendor_detail", vendor_id=new_id))
@@ -490,6 +526,7 @@ def edit_vendor(vendor_id):
     vendor = db.get_vendor(vendor_id)
     if request.method == "POST":
         db.update_vendor(vendor_id, **person_form(customer=False))
+        db.log_audit(current_user_id(), "EDIT_VENDOR", "vendors", vendor_id)
         flash("Vendor updated.", "success")
         return redirect(url_for("vendor_detail", vendor_id=vendor_id))
     return render_template("person_form.html", mode="Edit", kind="Vendor", action=url_for("edit_vendor", vendor_id=vendor_id), person=vendor)
@@ -571,6 +608,7 @@ def bank():
     if request.method == "POST":
         try:
             db.change_bank_balance(float(request.form.get("amount") or 0), request.form.get("change_type") or "ADD", request.form.get("note"), current_user_id())
+            db.log_audit(current_user_id(), "BANK_CHANGE", "bank_accounts", 1, request.form.get("note"))
             flash("Bank movement recorded.", "success")
         except ValueError as exc:
             flash(str(exc), "error")
@@ -588,6 +626,7 @@ def backups():
                 if request.form.get("confirmation") != "RESTORE":
                     raise ValueError("Type RESTORE exactly to confirm.")
                 backup_manager.restore_backup(request.files.get("backup_file"))
+                db.log_audit(current_user_id(), "RESTORE_COMPLETED", "database", None)
                 session.clear()
                 flash("Backup restored. Please sign in again.", "success")
                 return redirect(url_for("login"))
@@ -601,6 +640,7 @@ def backups():
 @login_required
 def download_backup():
     path = backup_manager.create_backup()
+    db.log_audit(current_user_id(), "BACKUP_CREATED", "database", None, path.name)
     return send_file(path, as_attachment=True, download_name=path.name)
 
 

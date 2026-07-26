@@ -1592,6 +1592,47 @@ dialog.sheet[open] { animation: sheet-in .22s ease both; }
   }
   body.nav-open .scrim { display: block; }
 }
+
+/* Reports — owner action ledger */
+.owner-report-summary {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  color: var(--muted);
+  font-size: 13px;
+}
+.owner-report-summary span {
+  padding: 6px 10px;
+  background: var(--gold-wash);
+  border-radius: var(--radius-pill);
+}
+.report-filters {
+  display: grid;
+  grid-template-columns: 160px 160px minmax(220px, 1fr) auto auto auto;
+  align-items: end;
+  gap: var(--space-3);
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--hairline);
+}
+.action-chip {
+  display: inline-flex;
+  padding: 4px 9px;
+  color: var(--gold-deep);
+  background: var(--gold-wash);
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+@media (max-width: 1000px) {
+  .report-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .report-filters .btn { width: 100%; }
+}
+@media (max-width: 600px) {
+  .owner-report-summary { justify-content: flex-start; }
+  .report-filters { grid-template-columns: 1fr; }
+}
 @media (max-width: 480px) {
   .topnav { padding: 8px var(--space-4); }
   .topnav-brand { min-width: 0; margin-right: 0; }
