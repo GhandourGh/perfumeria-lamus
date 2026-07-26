@@ -19,6 +19,7 @@ ES = {
     "Sign out": "Cerrar sesión", "Back": "Volver", "Dismiss notification": "Cerrar notificación",
     "End of page": "Fin de la página", "Back to top": "Volver arriba", "Maison Ledger": "Libro de cuentas",
     "Perfumería Lamus · Maison Ledger": "Perfumería Lamus · Libro de cuentas",
+    "Perfumería Lamus · Update verified": "Perfumería Lamus · Actualización verificada",
     "Maison Ledger · Private": "Libro de cuentas · Privado", "English": "Inglés",
     # Authentication
     "Owner access": "Acceso del propietario", "Welcome back": "Bienvenido de nuevo",
