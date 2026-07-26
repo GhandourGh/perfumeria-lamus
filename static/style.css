@@ -1854,7 +1854,8 @@ dialog.sheet[open] { animation: sheet-in .22s ease both; }
 }
 .nav-menu-panel span { display: block; min-width: 0; white-space: nowrap; }
 .nav-menu-panel strong { font-size: 14px; }
-.nav-account { margin-left: auto; }
+.nav-more { margin-left: auto; }
+.nav-account { margin-left: 0; }
 .nav-account-trigger { color: var(--surface-raised); }
 .nav-avatar {
   display: grid;
@@ -1876,6 +1877,7 @@ dialog.sheet[open] { animation: sheet-in .22s ease both; }
   body.nav-open .nav-menu-trigger .nav-chevron,
   body.nav-open .nav-account-trigger .nav-chevron { margin-left: auto; }
   body.nav-open .nav-account { margin-left: 0; }
+  body.nav-open .nav-more { margin-left: 0; }
   body.nav-open .nav-menu-panel,
   body.nav-open .nav-menu-panel-wide {
     position: static;
