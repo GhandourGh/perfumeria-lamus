@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+{% block title %}Customers overview · Perfumería Lamus{% endblock %}
+{% block body_attrs %} data-section="customer"{% endblock %}
+{% block content %}
+
+<header class="page-head">
+  <div>
+    <div class="eyebrow">Customers · {{ today_display }}</div>
+    <h1>Customers overview</h1>
+    <p class="lede">Customer credit, payments received, and who to follow up — at a glance.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn" href="{{ url_for('reports') }}"><i data-lucide="printer"></i>Reports</a>
+    <a class="btn btn-primary" href="{{ url_for('add_customer') }}"><i data-lucide="user-plus"></i>New customer</a>
+  </div>
+</header>
+
+<section class="grid grid-3" aria-label="Key figures">
+  <div class="stat">
+    <div class="stat-label">Outstanding balance</div>
+    <div class="stat-value {% if stats.total_outstanding > 0 %}is-due{% endif %}">{{ stats.total_outstanding|cop }}</div>
+    <div class="stat-note">{{ stats.customers_with_balance }} of {{ stats.customer_count }} customers owe</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Collected today</div>
+    <div class="stat-value {% if stats.collected_today > 0 %}is-good{% endif %}">{{ stats.collected_today|cop }}</div>
+    <div class="stat-note">{{ stats.payments_today }} payment{{ 's' if stats.payments_today != 1 }} received</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">New credit today</div>
+    <div class="stat-value">{{ stats.debt_added_today|cop }}</div>
+    <div class="stat-note">{{ stats.debts_today }} credit sale{{ 's' if stats.debts_today != 1 }} recorded</div>
+  </div>
+</section>
+
+<section class="panel" style="margin-top: var(--space-5)" aria-label="Find a customer">
+  <div class="panel-head">
+    <h2>Find a customer</h2>
+    <span class="hint">Open an account to record a credit sale or payment.</span>
+  </div>
+  <div class="toolbar">
+    <div class="searchbox">
+      <i data-lucide="search"></i>
+      <input type="search" data-registry-search placeholder="Search by name, phone, or note…" aria-label="Search customers">
+    </div>
+  </div>
+  <div class="table-scroll">
+    <table class="table table-stack" data-registry>
+      <thead>
+        <tr>
+          <th scope="col">Customer</th>
+          <th scope="col">Status</th>
+          <th scope="col" class="num">Balance due</th>
+          <th scope="col"><span class="sr-only">Actions</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for customer in customers %}
+        <tr data-row
+            data-search="{{ (customer.name ~ ' ' ~ (customer.phone or '') ~ ' ' ~ (customer.notes or ''))|lower }}"
+            data-balance="{{ customer.balance }}">
+          <td data-th="Customer">
+            <a class="row-link" href="{{ url_for('customer_detail', customer_id=customer.id) }}">
+              <span class="row-title">{{ customer.name }}</span>
+            </a>
+            <div class="row-sub">{{ customer.phone or 'No phone on file' }}</div>
+          </td>
+          <td data-th="Status">{{ ui.account_badge(customer.balance) }}</td>
+          <td data-th="Balance due" class="num">
+            <span class="amount {% if customer.balance > 0 %}amount-due{% else %}amount-muted{% endif %}">{{ customer.balance|cop }}</span>
+          </td>
+          <td data-th="">
+            <div class="row-actions">
+              {% if customer.balance > 0 %}<a class="btn btn-sm btn-gold" href="{{ url_for('customer_detail', customer_id=customer.id, action='pay') }}"><i data-lucide="hand-coins"></i>Payment</a>{% endif %}
+              <a class="btn btn-sm" href="{{ url_for('customer_detail', customer_id=customer.id) }}"><i data-lucide="book-open"></i>Open account</a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if customers %}
+    <div data-registry-empty hidden>
+      {{ ui.empty_state('No matches', 'No customer matches that search. Try a shorter part of the name or phone number.') }}
+    </div>
+  {% else %}
+    {% call ui.empty_state('No customers yet', 'Add your first customer to start keeping their account in the ledger.') %}
+      <a class="btn btn-primary" href="{{ url_for('add_customer') }}"><i data-lucide="user-plus"></i>Add first customer</a>
+    {% endcall %}
+  {% endif %}
+</section>
+
+<section class="grid grid-2" style="margin-top: var(--space-5)">
+  <div class="panel" aria-label="Recent activity">
+    <div class="panel-head">
+      <h2>Recent activity</h2>
+      <span class="hint">Latest ledger entries</span>
+    </div>
+    {% if recent_activity %}
+      <div class="table-scroll">
+        <table class="table">
+          <tbody>
+            {% for row in recent_activity %}
+            <tr>
+              <td>
+                <span class="entry-type {% if row.entry_type in ('NEW_DEBT','NEW_PURCHASE') %}is-charge{% elif row.entry_type in ('PAYMENT','PAYMENT_MADE') %}is-payment{% endif %}">
+                  <i data-lucide="{{ ui.entry_icon(row.entry_type) }}"></i>{{ ui.entry_label(row.entry_type) }}
+                </span>
+                <div class="row-sub">{{ row.name }} · {{ row.created_at|moment }}</div>
+              </td>
+              <td class="num">
+                <span class="amount {% if row.entry_type in ('PAYMENT','PAYMENT_MADE') %}amount-good{% endif %}">{{ row.amount|cop }}</span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      {{ ui.empty_state('A fresh book', 'Ledger entries will appear here as you record credit sales and payments.') }}
+    {% endif %}
+  </div>
+
+  <div class="panel" aria-label="Largest balances">
+    <div class="panel-head">
+      <h2>Largest balances</h2>
+      <a class="btn btn-sm" href="{{ url_for('customers') }}"><i data-lucide="users"></i>All customers</a>
+    </div>
+    {% if stats.largest_balances %}
+      <div class="table-scroll">
+        <table class="table">
+          <tbody>
+            {% for customer in stats.largest_balances %}
+            <tr>
+              <td>
+                <a class="row-link row-title" href="{{ url_for('customer_detail', customer_id=customer.id) }}">{{ customer.name }}</a>
+                {% if customer.last_payment_at %}<div class="row-sub">Last payment {{ customer.last_payment_at|day }}</div>
+                {% else %}<div class="row-sub">No payments yet</div>{% endif %}
+              </td>
+              <td class="num"><span class="amount amount-due">{{ customer.balance|cop }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      {{ ui.empty_state('All settled', 'No customer currently carries a balance.') }}
+    {% endif %}
+  </div>
+</section>
+
+<section style="margin-top: var(--space-5)">
+  <div class="panel" aria-label="House accounts">
+    <div class="panel-head">
+      <h2>House accounts</h2>
+      <span class="hint">Bancolombia &amp; suppliers</span>
+    </div>
+    <div class="grid grid-2">
+      <div class="stat stat-accent">
+        <div class="stat-label">Bank balance</div>
+        <div class="stat-value">{{ stats.bank_balance|cop }}</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Payable to vendors</div>
+        <div class="stat-value {% if stats.total_payable > 0 %}is-due{% endif %}">{{ stats.total_payable|cop }}</div>
+      </div>
+    </div>
+    <div class="page-actions" style="margin-top: var(--space-4)">
+      <a class="btn" href="{{ url_for('bank') }}"><i data-lucide="landmark"></i>Bank movements</a>
+      <a class="btn" href="{{ url_for('vendors') }}"><i data-lucide="package"></i>Vendor accounts</a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

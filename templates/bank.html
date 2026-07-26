@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+{% block title %}Bank · Perfumería Lamus{% endblock %}
+{% block content %}
+
+<header class="page-head">
+  <div>
+    <div class="eyebrow">Office · Bancolombia</div>
+    <h1>Bank balance</h1>
+    <p class="lede">Money added to and taken from the store's account, with a note for every movement.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn" href="{{ url_for('reports') }}"><i data-lucide="printer"></i>Printable history</a>
+  </div>
+</header>
+
+<section class="grid grid-split">
+  <div style="display: grid; gap: var(--space-4); align-content: start">
+    <div class="stat stat-accent">
+      <div class="stat-label">Current balance</div>
+      <div class="stat-value">{{ balance|cop }}</div>
+      <div class="stat-note">Bancolombia · main account</div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>Record a movement</h2></div>
+      <form class="form-grid" method="post" data-guard data-bank-form data-bank-balance="{{ balance|int }}">
+        <label class="field">
+          <span>Action</span>
+          <select name="change_type">
+            <option value="ADD">Add money to the account</option>
+            <option value="REMOVE">Take money out</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Amount</span>
+          <div class="money-input">
+            <input name="amount" type="number" inputmode="numeric" step="1" min="1" required placeholder="0">
+          </div>
+        </label>
+        <label class="field">
+          <span>Note</span>
+          <textarea name="note" rows="2" placeholder="What is this movement for?"></textarea>
+          <span class="field-help">A note is required when taking money out.</span>
+        </label>
+        <p class="field-help" data-overdraw-warning hidden style="color: var(--garnet)">
+          <strong>Heads up:</strong> this is more than the current balance — the account will go negative. You'll be asked to confirm.
+        </p>
+        <button class="btn btn-primary" type="submit"><i data-lucide="landmark"></i>Record movement</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Movement history</h2>
+      <span class="hint">Newest first</span>
+    </div>
+    {% if history %}
+    <div class="table-scroll">
+      <table class="table table-stack">
+        <thead>
+          <tr>
+            <th scope="col">Date</th>
+            <th scope="col">Action</th>
+            <th scope="col" class="num">Movement</th>
+            <th scope="col" class="num">Balance</th>
+            <th scope="col">Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in history %}
+          <tr>
+            <td data-th="Date">
+              <span class="amount amount-muted" style="font-weight:500">{{ row.created_at|day }}</span>
+              <div class="row-sub">{{ row.created_at|clock }}</div>
+            </td>
+            <td data-th="Action">
+              {% if row.change_type == 'ADD' %}<span class="badge badge-settled">Added</span>
+              {% elif row.change_type == 'REMOVE' %}<span class="badge badge-due">Removed</span>
+              {% else %}<span class="badge badge-neutral">Set</span>{% endif %}
+            </td>
+            <td data-th="Movement" class="num">
+              {% if row.change_type == 'REMOVE' %}<span class="amount amount-due">− {{ row.change_amount|cop }}</span>
+              {% elif row.change_type == 'ADD' %}<span class="amount amount-good">+ {{ row.change_amount|cop }}</span>
+              {% else %}<span class="amount amount-muted">{{ row.balance|cop }}</span>{% endif %}
+            </td>
+            <td data-th="Balance" class="num"><span class="amount">{{ row.balance|cop }}</span></td>
+            <td data-th="Note"><span class="muted small">{{ row.note or '—' }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      {{ ui.empty_state('No movements yet', 'Record the first balance or movement and the history will start here.') }}
+    {% endif %}
+  </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Perfumería Lamus{% endblock %}</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="{{ url_for('static', filename='vendor/lucide/lucide.min.js') }}" defer></script>
+</head>
+<body{% block body_attrs %}{% endblock %}>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="topnav">
+    <a class="topnav-brand" href="{{ url_for('dashboard') }}">
+      {% include "_logo.html" %}
+      <span>
+        <span class="topnav-brand-name">Perfumería Lamus</span>
+        <span class="topnav-brand-sub">Maison Ledger</span>
+      </span>
+    </a>
+    <button class="topnav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="topnav-menu" aria-label="Open navigation">
+      <i data-lucide="menu"></i>
+    </button>
+    <nav class="topnav-links" id="topnav-menu" aria-label="Primary">
+      {# Workspace switcher — flip the whole app between the Customers (receivables)
+         and Vendors (payables) books. Each lands on its own overview. #}
+      <div class="ws-switch" role="group" aria-label="Choose workspace">
+        <a class="ws-tab ws-tab-customer {% if workspace == 'customers' and not nav_office %}active{% endif %}" href="{{ url_for('dashboard') }}">
+          <i data-lucide="users"></i><span>Customers</span>
+        </a>
+        <a class="ws-tab ws-tab-vendor {% if workspace == 'vendors' and not nav_office %}active{% endif %}" href="{{ url_for('vendor_overview') }}">
+          <i data-lucide="package"></i><span>Vendors</span>
+        </a>
+      </div>
+
+      <span class="nav-sep" aria-hidden="true"></span>
+
+      {# Section links — only the active workspace's pages are shown. #}
+      {% if workspace == 'vendors' %}
+        <a class="nav-link {% if request.endpoint == 'vendor_overview' %}active{% endif %}" data-section-link="vendor" href="{{ url_for('vendor_overview') }}">
+          <i data-lucide="layout-dashboard"></i>Overview
+        </a>
+        <a class="nav-link {% if request.endpoint in ('vendors', 'vendor_detail', 'add_vendor', 'edit_vendor') %}active{% endif %}" data-section-link="vendor" href="{{ url_for('vendors') }}">
+          <i data-lucide="package"></i>Vendors
+        </a>
+      {% else %}
+        <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" data-section-link="customer" href="{{ url_for('dashboard') }}">
+          <i data-lucide="layout-dashboard"></i>Overview
+        </a>
+        <a class="nav-link {% if request.endpoint and 'customer' in request.endpoint %}active{% endif %}" data-section-link="customer" href="{{ url_for('customers') }}">
+          <i data-lucide="users"></i>Customers
+        </a>
+      {% endif %}
+
+      <span class="nav-sep nav-sep-office" aria-hidden="true"></span>
+
+      {# Office — shared by both workspaces. #}
+      <a class="nav-link nav-link-office {% if request.endpoint == 'bank' %}active{% endif %}" href="{{ url_for('bank') }}">
+        <i data-lucide="landmark"></i>Bank
+      </a>
+      <a class="nav-link nav-link-office {% if request.endpoint == 'reports' %}active{% endif %}" href="{{ url_for('reports') }}">
+        <i data-lucide="printer"></i>Reports
+      </a>
+    </nav>
+    {% if current_user %}
+    <div class="topnav-user">
+      <span class="topnav-user-name">{{ current_user.full_name }}</span>
+      <form action="{{ url_for('logout') }}" method="post">
+        <button class="logout-button" type="submit"><i data-lucide="log-out"></i>Sign out</button>
+      </form>
+    </div>
+    {% endif %}
+  </header>
+  <button class="scrim" type="button" data-nav-scrim tabindex="-1" aria-hidden="true"></button>
+
+  <main class="main" id="main">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="toasts">
+            {% for category, message in messages %}
+              <div class="toast {{ category }}" role="{% if category == 'error' %}alert{% else %}status{% endif %}">
+                <i data-lucide="{% if category == 'error' %}alert-circle{% else %}check-circle-2{% endif %}"></i>
+                <span>{{ message }}</span>
+                <button class="toast-close" type="button" aria-label="Dismiss notification"><i data-lucide="x"></i></button>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </main>
+
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</body>
+</html>

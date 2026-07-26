@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+{% block title %}Reports · Perfumería Lamus{% endblock %}
+{% block content %}
+
+<div class="print-only">
+  <h1>Perfumería Lamus — Business overview</h1>
+  <p>Prepared {{ now_display }}</p>
+</div>
+
+<header class="page-head">
+  <div>
+    <div class="eyebrow">Office · Print center</div>
+    <h1>Reports</h1>
+    <p class="lede">Print the full business overview, or open a customer or vendor statement from the tables below.</p>
+  </div>
+  <div class="page-actions">
+    <button class="btn btn-primary" type="button" data-print><i data-lucide="printer"></i>Print business overview</button>
+  </div>
+</header>
+
+<section class="grid grid-3" aria-label="Business figures">
+  <div class="stat">
+    <div class="stat-label">Outstanding balance</div>
+    <div class="stat-value {% if stats.total_outstanding > 0 %}is-due{% endif %}">{{ stats.total_outstanding|cop }}</div>
+    <div class="stat-note">{{ stats.customers_with_balance }} customer{{ 's' if stats.customers_with_balance != 1 }} owe</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Payable to vendors</div>
+    <div class="stat-value">{{ stats.total_payable|cop }}</div>
+    <div class="stat-note">{{ stats.vendor_count }} vendor{{ 's' if stats.vendor_count != 1 }} on file</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Bank balance</div>
+    <div class="stat-value">{{ bank_balance|cop }}</div>
+    <div class="stat-note">Bancolombia · main account</div>
+  </div>
+</section>
+
+<section class="panel" style="margin-top: var(--space-5)" aria-label="Customer balances">
+  <div class="panel-head panel-head-customer">
+    <h2><i data-lucide="users"></i>Customer balances</h2>
+    <span class="hint">As of {{ now_display }}</span>
+  </div>
+  <div class="table-scroll">
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">Customer</th>
+          <th scope="col">Phone</th>
+          <th scope="col" class="num">Credit taken</th>
+          <th scope="col" class="num">Paid</th>
+          <th scope="col" class="num">Balance due</th>
+          <th scope="col" class="no-print"><span class="sr-only">Statement</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for customer in customers %}
+        <tr>
+          <td class="row-title">{{ customer.name }}</td>
+          <td class="muted">{{ customer.phone or '—' }}</td>
+          <td class="num"><span class="amount amount-muted">{{ customer.total_debt|cop }}</span></td>
+          <td class="num"><span class="amount amount-muted">{{ customer.total_paid|cop }}</span></td>
+          <td class="num"><span class="amount {% if customer.balance > 0 %}amount-due{% endif %}">{{ customer.balance|cop }}</span></td>
+          <td class="no-print">
+            <div class="row-actions">
+              <a class="btn btn-sm" href="{{ url_for('customer_report', customer_id=customer.id) }}"><i data-lucide="printer"></i>Statement</a>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="muted">No customers on file.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel" style="margin-top: var(--space-5)" aria-label="Vendor balances">
+  <div class="panel-head panel-head-vendor">
+    <h2><i data-lucide="package"></i>Vendor balances</h2>
+  </div>
+  <div class="table-scroll">
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">Vendor</th>
+          <th scope="col">Phone</th>
+          <th scope="col" class="num">Purchased</th>
+          <th scope="col" class="num">Paid</th>
+          <th scope="col" class="num">Payable</th>
+          <th scope="col" class="no-print"><span class="sr-only">Statement</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for vendor in vendors %}
+        <tr>
+          <td class="row-title">{{ vendor.name }}</td>
+          <td class="muted">{{ vendor.phone or '—' }}</td>
+          <td class="num"><span class="amount amount-muted">{{ vendor.total_purchased|cop }}</span></td>
+          <td class="num"><span class="amount amount-muted">{{ vendor.total_paid|cop }}</span></td>
+          <td class="num"><span class="amount {% if vendor.balance > 0 %}amount-due{% endif %}">{{ vendor.balance|cop }}</span></td>
+          <td class="no-print">
+            <div class="row-actions">
+              <a class="btn btn-sm" href="{{ url_for('vendor_report', vendor_id=vendor.id) }}"><i data-lucide="printer"></i>Statement</a>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="muted">No vendors on file.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel" style="margin-top: var(--space-5)" aria-label="Bank history">
+  <div class="panel-head">
+    <h2>Bank history</h2>
+    <span class="hint">Last {{ bank_history|length }} movements</span>
+  </div>
+  <div class="table-scroll">
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">Date</th>
+          <th scope="col">Action</th>
+          <th scope="col" class="num">Movement</th>
+          <th scope="col" class="num">Balance</th>
+          <th scope="col">Note</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in bank_history %}
+        <tr>
+          <td>{{ row.created_at|moment }}</td>
+          <td>{% if row.change_type == 'ADD' %}Added{% elif row.change_type == 'REMOVE' %}Removed{% else %}Set{% endif %}</td>
+          <td class="num">
+            {% if row.change_type == 'REMOVE' %}<span class="amount amount-due">− {{ row.change_amount|cop }}</span>
+            {% elif row.change_type == 'ADD' %}<span class="amount amount-good">+ {{ row.change_amount|cop }}</span>
+            {% else %}<span class="amount amount-muted">{{ row.balance|cop }}</span>{% endif %}
+          </td>
+          <td class="num"><span class="amount">{{ row.balance|cop }}</span></td>
+          <td class="muted small">{{ row.note or '—' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="muted">No bank history.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel" style="margin-top: var(--space-5)" aria-label="Recent activity">
+  <div class="panel-head">
+    <h2>Recent ledger activity</h2>
+    <span class="hint">Last {{ recent_activity|length }} entries</span>
+  </div>
+  <div class="table-scroll">
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">Date</th>
+          <th scope="col">Account</th>
+          <th scope="col">Entry</th>
+          <th scope="col" class="num">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in recent_activity %}
+        <tr>
+          <td>{{ row.created_at|moment }}</td>
+          <td class="row-title">{{ row.name }}</td>
+          <td>{{ ui.entry_label(row.entry_type) }}</td>
+          <td class="num"><span class="amount">{{ row.amount|cop }}</span></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="muted">No activity yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% endblock %}

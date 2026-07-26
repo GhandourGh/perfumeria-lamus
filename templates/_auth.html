@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Perfumería Lamus{% endblock %}</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="{{ url_for('static', filename='vendor/lucide/lucide.min.js') }}" defer></script>
+</head>
+<body>
+  <div class="auth-page">
+    <aside class="auth-aside">
+      <div class="auth-stage">
+        <div class="auth-halo">
+          {% include "_logo.html" %}
+        </div>
+        <div class="auth-aside-title">Perfumería Lamus</div>
+        <span class="auth-aside-rule" aria-hidden="true"></span>
+        <p class="auth-aside-sub">The house ledger — customer accounts, credit sales, and payments, kept in one careful book.</p>
+      </div>
+      <div class="auth-aside-foot">Maison Ledger &middot; Private</div>
+    </aside>
+    <main class="auth-main">
+      <div class="auth-mobile-brand">
+        {% include "_logo.html" %}
+        <span>Perfumería Lamus</span>
+      </div>
+      <div class="auth-card">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="auth-flash">
+              {% for category, message in messages %}
+                <div class="toast {{ category }}" role="{% if category == 'error' %}alert{% else %}status{% endif %}">
+                  <i data-lucide="{% if category == 'error' %}alert-circle{% else %}check-circle-2{% endif %}"></i>
+                  <span>{{ message }}</span>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+        {% block card %}{% endblock %}
+      </div>
+    </main>
+  </div>
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</body>
+</html>

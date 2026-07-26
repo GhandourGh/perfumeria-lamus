@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+{% block title %}{{ mode }} {{ kind|lower }} · Perfumería Lamus{% endblock %}
+{% block body_attrs %} data-section="{{ 'vendor' if kind == 'Vendor' else 'customer' }}"{% endblock %}
+{% block content %}
+
+<header class="page-head">
+  <div>
+    <div class="eyebrow">{{ 'Registry · Customers' if kind == 'Customer' else 'Registry · Vendors' }}</div>
+    <h1>{{ 'New' if mode == 'Add' else 'Edit' }} {{ kind|lower }}</h1>
+    <p class="lede">
+      {% if mode == 'Add' %}
+        {% if kind == 'Customer' %}Open a new customer account in the ledger.{% else %}Add a supplier the store buys stock from.{% endif %}
+      {% else %}
+        Update the details on this account. The ledger history is not affected.
+      {% endif %}
+    </p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-ghost" href="{{ url_for('customers' if kind == 'Customer' else 'vendors') }}"><i data-lucide="arrow-left"></i>Back to {{ 'customers' if kind == 'Customer' else 'vendors' }}</a>
+  </div>
+</header>
+
+<section class="panel" style="max-width: 640px">
+  <form class="form-grid" method="post" action="{{ action }}" data-guard data-warn-unsaved>
+    <div class="form-row">
+      <label class="field">
+        <span>Full name</span>
+        <input name="name" value="{{ person.name or '' }}" required maxlength="80" autofocus>
+      </label>
+      <label class="field">
+        <span>Phone <em class="optional">optional</em></span>
+        <input name="phone" type="tel" value="{{ person.phone or '' }}" maxlength="30" placeholder="300 123 4567">
+      </label>
+    </div>
+    <label class="field">
+      <span>Notes <em class="optional">optional</em></span>
+      <textarea name="notes" rows="3" placeholder="{% if kind == 'Customer' %}Payment habits, family account, preferences…{% else %}Ordering details, invoice cadence…{% endif %}">{{ person.notes or '' }}</textarea>
+    </label>
+    {% if mode == 'Add' %}
+    <div class="form-row">
+      <label class="field">
+        <span>{{ 'Opening balance owed' if kind == 'Customer' else 'Opening amount payable' }} <em class="optional">optional</em></span>
+        <div class="money-input">
+          <input name="opening_amount" type="number" inputmode="numeric" step="1" min="1" autocomplete="off" placeholder="0">
+        </div>
+        <span class="field-help">{% if kind == 'Customer' %}Already owed from before? Record it now as the first entry.{% else %}Already owe this supplier? Record it now as the first entry.{% endif %}</span>
+      </label>
+      <label class="field">
+        <span>What for <em class="optional">optional</em></span>
+        <input name="opening_description" maxlength="120" placeholder="{% if kind == 'Customer' %}e.g. Previous tab{% else %}e.g. Outstanding invoice{% endif %}">
+      </label>
+    </div>
+    {% endif %}
+    <div class="page-actions">
+      <button class="btn btn-primary" type="submit">
+        <i data-lucide="save"></i>{{ 'Add ' ~ kind|lower if mode == 'Add' else 'Save changes' }}
+      </button>
+      <a class="btn btn-ghost" href="{{ url_for('customers' if kind == 'Customer' else 'vendors') }}">Cancel</a>
+    </div>
+  </form>
+</section>
+
+{% if mode == 'Edit' %}
+<section class="panel" style="max-width: 640px; margin-top: var(--space-5)">
+  <div class="panel-head"><h2>Archive this {{ kind|lower }}</h2></div>
+  <p class="muted small">Hides {{ person.name }} from the {{ 'customers' if kind == 'Customer' else 'vendors' }} list and overviews. The ledger history is kept — nothing is deleted.</p>
+  <div class="page-actions" style="margin-top: var(--space-4)">
+    <button class="btn btn-danger" type="button" data-open-sheet="sheet-archive"><i data-lucide="archive"></i>Archive {{ kind|lower }}</button>
+  </div>
+</section>
+
+<dialog class="sheet" id="sheet-archive" aria-labelledby="sheet-archive-title">
+  <div class="sheet-head">
+    <i data-lucide="archive"></i>
+    <h2 id="sheet-archive-title">Archive {{ person.name }}?</h2>
+    <button class="sheet-close" type="button" data-close-sheet aria-label="Close"><i data-lucide="x"></i></button>
+  </div>
+  <form method="post" action="{{ url_for('archive_customer', customer_id=person.id) if kind == 'Customer' else url_for('archive_vendor', vendor_id=person.id) }}" data-guard>
+    <div class="sheet-body form-grid">
+      <p class="field-help">They'll drop out of the {{ 'customers' if kind == 'Customer' else 'vendors' }} list and overviews. You can still open their statement by link, and history is preserved.</p>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn" type="button" data-close-sheet>Cancel</button>
+      <button class="btn btn-danger" type="submit"><i data-lucide="archive"></i>Archive {{ kind|lower }}</button>
+    </div>
+  </form>
+</dialog>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,14 @@
+<svg class="seal" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <circle cx="60" cy="60" r="57" stroke="currentColor" stroke-width="1.4"/>
+  <circle cx="60" cy="60" r="44.5" stroke="currentColor" stroke-width="0.9"/>
+  <path id="seal-arc-top" d="M 60 60 m -51 0 a 51 51 0 1 1 102 0" fill="none"/>
+  <path id="seal-arc-bottom" d="M 60 60 m -51 0 a 51 51 0 1 0 102 0" fill="none"/>
+  <text font-size="9.2" letter-spacing="2.6" fill="currentColor" font-family="Arial,Helvetica,sans-serif" font-weight="600">
+    <textPath href="#seal-arc-top" startOffset="50%" text-anchor="middle">PERFUMER&#205;A</textPath>
+  </text>
+  <text font-size="9.2" letter-spacing="4" fill="currentColor" font-family="Arial,Helvetica,sans-serif" font-weight="600">
+    <textPath href="#seal-arc-bottom" startOffset="50%" text-anchor="middle">&#183; LAMUS &#183;</textPath>
+  </text>
+  <text x="60" y="74" text-anchor="middle" font-size="38" fill="currentColor"
+        font-family="Arial,Helvetica,sans-serif" font-weight="600" letter-spacing="1">PL</text>
+</svg>

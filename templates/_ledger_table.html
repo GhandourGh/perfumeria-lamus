@@ -1,0 +1,104 @@
+{% import "_macros.html" as ui %}
+<section class="panel" style="margin-top: var(--space-5)" aria-label="Account ledger">
+  <div class="panel-head">
+    <h2>Account ledger</h2>
+    <span class="hint">{{ ledger|length }} entr{{ 'y' if ledger|length == 1 else 'ies' }} · newest first</span>
+  </div>
+  {% if ledger %}
+  <div class="table-scroll">
+    <table class="table table-stack">
+      <thead>
+        <tr>
+          <th scope="col">Date</th>
+          <th scope="col">Entry</th>
+          <th scope="col">Detail</th>
+          <th scope="col">Status</th>
+          <th scope="col" class="num">Amount</th>
+          <th scope="col" class="num">Balance after</th>
+          {% if ledger_kind %}<th scope="col" class="no-print"><span class="sr-only">Actions</span></th>{% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in ledger %}
+        <tr {% if row.is_voided %}style="opacity:.55"{% endif %}>
+          <td data-th="Date">
+            <span class="amount amount-muted" style="font-weight:500">{{ row.created_at|day }}</span>
+            <div class="row-sub">{{ row.created_at|clock }}</div>
+          </td>
+          <td data-th="Entry">
+            <span class="entry-type {% if row.entry_type in ('NEW_DEBT','NEW_PURCHASE') %}is-charge{% elif row.entry_type in ('PAYMENT','PAYMENT_MADE') %}is-payment{% endif %}">
+              <i data-lucide="{{ ui.entry_icon(row.entry_type) }}"></i>{{ ui.entry_label(row.entry_type) }}
+            </span>
+            {% if row.payment_method %}<div class="row-sub">{{ ui.method_label(row.payment_method) }}</div>{% endif %}
+          </td>
+          <td data-th="Detail">
+            {% for item in row['items'] %}
+              <div>{% if item.quantity != 1 %}{{ item.quantity }} × {% endif %}{{ item.product_name }}</div>
+            {% endfor %}
+            {% if row.due_date %}<div class="row-sub">Due {{ row.due_date|day }}</div>{% endif %}
+            {% set item_names = row['items']|map(attribute='product_name')|list %}
+            {% if row.notes %}<div class="row-sub">{{ row.notes }}</div>
+            {% elif row.description and row.description not in item_names %}<div class="row-sub">{{ row.description }}</div>{% endif %}
+            {% if row.is_voided %}<div class="row-sub">Voided{% if row.void_reason %} — {{ row.void_reason }}{% endif %}</div>{% endif %}
+          </td>
+          <td data-th="Status">
+            {% if row.is_voided %}
+              <span class="badge badge-neutral">Voided</span>
+            {% elif row.entry_type in ('NEW_DEBT', 'NEW_PURCHASE') %}
+              {{ ui.status_badge(row.payment_status) }}
+              {% if row.payment_status == 'PARTIAL' and row.remaining_amount %}
+                <div class="row-sub">{{ row.remaining_amount|cop }} left</div>
+              {% endif %}
+            {% endif %}
+          </td>
+          <td data-th="Amount" class="num">
+            <span class="amount {% if row.is_voided %}amount-muted{% elif row.entry_type in ('PAYMENT','PAYMENT_MADE') %}amount-good{% elif row.entry_type in ('NEW_DEBT','NEW_PURCHASE') %}amount-due{% endif %}"
+                  {% if row.is_voided %}style="text-decoration: line-through"{% endif %}>
+              {%- if row.entry_type in ('PAYMENT','PAYMENT_MADE','REFUND','WRITE_OFF') %}−{% else %}+{% endif %} {{ row.amount|cop }}
+            </span>
+          </td>
+          <td data-th="Balance after" class="num">
+            {% if row.is_voided %}<span class="muted">—</span>{% elif row.balance_after is not none %}<span class="amount">{{ row.balance_after|cop }}</span>{% else %}<span class="muted">—</span>{% endif %}
+          </td>
+          {% if ledger_kind %}
+          <td data-th="" class="no-print">
+            {% if not row.is_voided %}
+              <button class="btn btn-sm btn-ghost" type="button"
+                      data-void="{{ url_for('void_customer_ledger', customer_id=ledger_owner_id, entry_id=row.id) if ledger_kind == 'customer' else url_for('void_vendor_ledger', vendor_id=ledger_owner_id, entry_id=row.id) }}"
+                      aria-label="Void this entry"><i data-lucide="ban"></i>Void</button>
+            {% endif %}
+          </td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    {{ ui.empty_state('No entries yet', 'This account has no movements. Record a credit sale or payment and it will appear here.') }}
+  {% endif %}
+</section>
+
+{% if ledger_kind %}
+{# Shared void confirmation — its form action is set per-row by app.js. #}
+<dialog class="sheet" id="sheet-void" aria-labelledby="sheet-void-title">
+  <div class="sheet-head">
+    <i data-lucide="ban"></i>
+    <h2 id="sheet-void-title">Void this entry</h2>
+    <button class="sheet-close" type="button" data-close-sheet aria-label="Close"><i data-lucide="x"></i></button>
+  </div>
+  <form method="post" data-void-form data-guard>
+    <div class="sheet-body form-grid">
+      <p class="field-help">This reverses the entry out of the balance. It stays in the ledger, struck through, as a record. This can't be undone.</p>
+      <label class="field">
+        <span>Reason <em class="optional">optional</em></span>
+        <input name="reason" maxlength="120" placeholder="e.g. Entered the wrong amount">
+      </label>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn" type="button" data-close-sheet>Cancel</button>
+      <button class="btn btn-danger" type="submit"><i data-lucide="ban"></i>Void entry</button>
+    </div>
+  </form>
+</dialog>
+{% endif %}

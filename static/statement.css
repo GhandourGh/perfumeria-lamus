@@ -1,0 +1,297 @@
+/* ==========================================================================
+   PERFUMERÍA LAMUS — printable statement (A4)
+   Standalone document styling: engraved-invoice look on screen and paper.
+   ========================================================================== */
+
+:root {
+  --ink: #1c1710;
+  --soft: #55493a;
+  --faint: #8a7c63;
+  --hairline: #d9cfb8;
+  --rule: #b19855;
+  --gold: #77602a;
+  --garnet: #d62839;
+  --laurel: #1f8a3c;
+  --paper: #efe9db;
+  --sheet: #fffdf8;
+  --font-display: Arial, Helvetica, sans-serif;
+  --font-body: Arial, Helvetica, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  font-family: var(--font-body);
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* ---------- On-screen toolbar ---------- */
+
+.statement-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px clamp(16px, 4vw, 40px);
+  background: #1c1710;
+  color: #cfc4ab;
+}
+.statement-toolbar .grow { flex: 1; }
+.statement-toolbar a, .statement-toolbar button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px 14px;
+  border-radius: 5px;
+  border: 1px solid #3b3220;
+  background: transparent;
+  color: #cfc4ab;
+  font: inherit;
+  font-weight: 600;
+  font-size: 13.5px;
+  cursor: pointer;
+  text-decoration: none;
+}
+.statement-toolbar a:hover, .statement-toolbar button:hover { border-color: #c9a45c; color: #c9a45c; }
+.statement-toolbar .primary { background: #77602a; border-color: #77602a; color: #fdf9ee; }
+.statement-toolbar .primary:hover { background: #665222; color: #fdf9ee; }
+.statement-toolbar i, .statement-toolbar svg.lucide { width: 15px; height: 15px; }
+
+/* ---------- The sheet ---------- */
+
+.sheet {
+  width: min(210mm, 100%);
+  margin: clamp(12px, 3vw, 40px) auto;
+  background: var(--sheet);
+  box-shadow: 0 2px 8px rgba(40, 32, 16, .12), 0 24px 60px rgba(40, 32, 16, .18);
+  padding: clamp(20px, 5vw, 56px) clamp(18px, 5vw, 52px);
+}
+
+/* ---------- Letterhead ---------- */
+
+.letterhead {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding-bottom: 18px;
+  border-bottom: 2px solid var(--ink);
+  position: relative;
+}
+.letterhead::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: -5px;
+  border-bottom: 1px solid var(--rule);
+}
+.letterhead .seal {
+  width: 76px;
+  height: 76px;
+  flex: 0 0 auto;
+  display: block;
+  object-fit: contain;
+  border-radius: 12px;
+}
+.letterhead-name {
+  font-family: var(--font-display);
+  font-size: 27px;
+  letter-spacing: .02em;
+}
+.letterhead-sub {
+  font-size: 10px;
+  letter-spacing: .3em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin-top: 3px;
+}
+.letterhead-meta {
+  margin-left: auto;
+  text-align: right;
+  font-size: 12px;
+  color: var(--soft);
+}
+.letterhead-meta .doc-title {
+  font-family: var(--font-display);
+  font-size: 17px;
+  color: var(--ink);
+  letter-spacing: .04em;
+}
+
+/* ---------- Parties & summary ---------- */
+
+.parties {
+  display: flex;
+  justify-content: space-between;
+  gap: 28px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+.party-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin-bottom: 6px;
+}
+.party-name { font-family: var(--font-display); font-size: 19px; }
+.party-line { color: var(--soft); margin-top: 2px; }
+
+.balance-box {
+  border: 1px solid var(--rule);
+  padding: 14px 22px;
+  text-align: right;
+  min-width: 220px;
+}
+.balance-box .party-label { margin-bottom: 2px; }
+.balance-amount {
+  font-family: var(--font-display);
+  font-size: 27px;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.balance-amount.due { color: var(--garnet); }
+.balance-amount.settled { color: var(--laurel); }
+
+.totals-line {
+  display: flex;
+  gap: 0;
+  margin-top: 22px;
+  border-top: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+}
+.totals-line > div {
+  flex: 1;
+  padding: 10px 14px;
+  border-right: 1px solid var(--hairline);
+}
+.totals-line > div:last-child { border-right: 0; }
+.totals-line .party-label { margin-bottom: 2px; }
+.totals-line .total-value {
+  font-variant-numeric: lining-nums tabular-nums;
+  font-weight: 650;
+  font-size: 15px;
+}
+
+/* ---------- Ledger table ---------- */
+
+.ledger-title {
+  font-family: var(--font-display);
+  font-size: 17px;
+  margin: 26px 0 10px;
+}
+
+table.ledger {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11.5px;
+}
+.ledger thead { display: table-header-group; }
+.ledger th {
+  text-align: left;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--soft);
+  padding: 7px 8px;
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+}
+.ledger td {
+  padding: 8px;
+  border-bottom: 1px solid var(--hairline);
+  vertical-align: top;
+}
+.ledger tr { break-inside: avoid; page-break-inside: avoid; }
+.ledger .num { text-align: right; font-variant-numeric: lining-nums tabular-nums; white-space: nowrap; }
+.ledger .entry { font-weight: 650; white-space: nowrap; }
+.ledger .sub { color: var(--faint); font-size: 10.5px; }
+.ledger .due-amt { color: var(--garnet); }
+.ledger .good-amt { color: var(--laurel); }
+.ledger .voided { opacity: .55; }
+.ledger .voided .num { text-decoration: line-through; }
+.ledger tfoot td {
+  border-top: 1.5px solid var(--ink);
+  border-bottom: none;
+  font-weight: 700;
+  font-size: 12.5px;
+}
+
+.ledger-empty {
+  padding: 26px;
+  text-align: center;
+  color: var(--faint);
+  border: 1px dashed var(--hairline);
+  margin-top: 8px;
+}
+
+/* ---------- Signatures & footer ---------- */
+
+.sign-row {
+  display: flex;
+  gap: 48px;
+  margin-top: 52px;
+  break-inside: avoid;
+}
+.sign-row > div { flex: 1; max-width: 260px; }
+.sign-line {
+  border-bottom: 1px solid var(--ink);
+  height: 34px;
+}
+.sign-caption {
+  font-size: 10px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin-top: 6px;
+}
+
+.statement-foot {
+  margin-top: 34px;
+  padding-top: 10px;
+  border-top: 1px solid var(--hairline);
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 10px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+/* ---------- Print ---------- */
+
+@page {
+  size: A4;
+  margin: 14mm 12mm 16mm;
+}
+
+@media print {
+  body { background: #fff; font-size: 11.5px; }
+  .statement-toolbar { display: none; }
+  .sheet {
+    width: auto;
+    margin: 0;
+    box-shadow: none;
+    padding: 0;
+    background: #fff;
+  }
+  .letterhead .seal { filter: none; }
+  .sign-row { page-break-inside: avoid; }
+  a { color: inherit; text-decoration: none; }
+}
+
+@media (max-width: 640px) {
+  .parties { flex-direction: column; }
+  .balance-box { text-align: left; }
+  .totals-line { flex-direction: column; }
+  .totals-line > div { border-right: 0; border-bottom: 1px solid var(--hairline); }
+  .totals-line > div:last-child { border-bottom: 0; }
+  .sheet-scroll { overflow-x: auto; }
+}

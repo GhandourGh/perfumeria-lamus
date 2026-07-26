@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+{% block title %}Vendors · Perfumería Lamus{% endblock %}
+{% block body_attrs %} data-section="vendor"{% endblock %}
+{% block content %}
+
+<header class="page-head">
+  <div>
+    <div class="eyebrow">Registry · Payables</div>
+    <h1>Vendors</h1>
+    <p class="lede">Suppliers of the house — stock purchases, payments sent, and what remains payable.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn" href="{{ url_for('reports') }}"><i data-lucide="printer"></i>Reports</a>
+    <a class="btn btn-primary" href="{{ url_for('add_vendor') }}"><i data-lucide="package-plus"></i>New vendor</a>
+  </div>
+</header>
+
+<section class="panel">
+  <div class="toolbar">
+    <div class="searchbox">
+      <i data-lucide="search"></i>
+      <input type="search" data-registry-search placeholder="Search by name, phone, or note…" aria-label="Search vendors">
+    </div>
+    <div class="chip-row" role="group" aria-label="Filter vendors">
+      <button class="chip" type="button" data-filter="all" aria-pressed="true">All</button>
+      <button class="chip" type="button" data-filter="debt" aria-pressed="false">With payable</button>
+      <button class="chip" type="button" data-filter="clear" aria-pressed="false">Settled</button>
+    </div>
+  </div>
+
+  <div class="table-scroll">
+    <table class="table table-stack" data-registry>
+      <thead>
+        <tr>
+          <th scope="col">Vendor</th>
+          <th scope="col">Status</th>
+          <th scope="col" class="num">Purchased</th>
+          <th scope="col" class="num">Paid</th>
+          <th scope="col" class="num">Payable</th>
+          <th scope="col"><span class="sr-only">Actions</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for vendor in vendors %}
+        <tr data-row
+            data-search="{{ (vendor.name ~ ' ' ~ (vendor.phone or '') ~ ' ' ~ (vendor.notes or ''))|lower }}"
+            data-balance="{{ vendor.balance }}">
+          <td data-th="Vendor">
+            <a class="row-link" href="{{ url_for('vendor_detail', vendor_id=vendor.id) }}">
+              <span class="row-title">{{ vendor.name }}</span>
+            </a>
+            <div class="row-sub">{{ vendor.phone or 'No phone on file' }}{% if vendor.notes %} · {{ vendor.notes|truncate(46) }}{% endif %}</div>
+          </td>
+          <td data-th="Status">
+            {% if vendor.balance > 0 %}<span class="badge badge-due">Payable</span>{% else %}<span class="badge badge-settled">Settled</span>{% endif %}
+          </td>
+          <td data-th="Purchased" class="num"><span class="amount amount-muted">{{ vendor.total_purchased|cop }}</span></td>
+          <td data-th="Paid" class="num"><span class="amount amount-muted">{{ vendor.total_paid|cop }}</span></td>
+          <td data-th="Payable" class="num">
+            <span class="amount {% if vendor.balance > 0 %}amount-due{% else %}amount-muted{% endif %}">{{ vendor.balance|cop }}</span>
+          </td>
+          <td data-th="">
+            <div class="row-actions">
+              {% if vendor.balance > 0 %}<a class="btn btn-sm btn-gold" href="{{ url_for('vendor_detail', vendor_id=vendor.id, action='vpay') }}"><i data-lucide="hand-coins"></i>Pay</a>{% endif %}
+              <a class="btn btn-sm btn-primary" href="{{ url_for('vendor_detail', vendor_id=vendor.id) }}"><i data-lucide="book-open"></i>Open</a>
+              <a class="btn btn-sm" href="{{ url_for('vendor_report', vendor_id=vendor.id) }}"><i data-lucide="printer"></i>Statement</a>
+              <a class="btn btn-sm btn-ghost" href="{{ url_for('edit_vendor', vendor_id=vendor.id) }}" aria-label="Edit {{ vendor.name }}"><i data-lucide="pencil"></i></a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if vendors %}
+    <div data-registry-empty hidden>
+      {{ ui.empty_state('No matches', 'No vendor matches this search or filter.') }}
+    </div>
+  {% else %}
+    {% call ui.empty_state('No vendors yet', 'Add the suppliers you buy stock from to track what the store owes them.') %}
+      <a class="btn btn-primary" href="{{ url_for('add_vendor') }}"><i data-lucide="package-plus"></i>Add first vendor</a>
+    {% endcall %}
+  {% endif %}
+</section>
+
+{% endblock %}

@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+{% block title %}Customers · Perfumería Lamus{% endblock %}
+{% block body_attrs %} data-section="customer"{% endblock %}
+{% block content %}
+
+<header class="page-head">
+  <div>
+    <div class="eyebrow">Registry · Receivables</div>
+    <h1>Customers</h1>
+    <p class="lede">Every account, its balance, and its last movement — ready for the counter.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn" href="{{ url_for('reports') }}"><i data-lucide="printer"></i>Reports</a>
+    <a class="btn btn-primary" href="{{ url_for('add_customer') }}"><i data-lucide="user-plus"></i>New customer</a>
+  </div>
+</header>
+
+<section class="panel">
+  <div class="toolbar">
+    <div class="searchbox">
+      <i data-lucide="search"></i>
+      <input type="search" data-registry-search placeholder="Search by name, phone, or note…" aria-label="Search customers">
+    </div>
+    <div class="chip-row" role="group" aria-label="Filter customers">
+      <button class="chip" type="button" data-filter="all" aria-pressed="true">All</button>
+      <button class="chip" type="button" data-filter="debt" aria-pressed="false">With balance</button>
+      <button class="chip" type="button" data-filter="clear" aria-pressed="false">Settled</button>
+      <button class="chip" type="button" data-filter="paid-recently" aria-pressed="false">Paid recently</button>
+    </div>
+    <label class="field" style="margin-left:auto; min-width: 190px">
+      <span class="sr-only">Sort customers</span>
+      <select data-registry-sort aria-label="Sort customers">
+        <option value="name">Sort: Name A–Z</option>
+        <option value="balance-desc">Sort: Largest balance</option>
+        <option value="recent">Sort: Recently active</option>
+        <option value="newest">Sort: Recently added</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="table-scroll">
+    <table class="table table-stack" data-registry>
+      <thead>
+        <tr>
+          <th scope="col">Customer</th>
+          <th scope="col">Status</th>
+          <th scope="col" class="num">Credit taken</th>
+          <th scope="col" class="num">Paid</th>
+          <th scope="col" class="num">Balance due</th>
+          <th scope="col">Last payment</th>
+          <th scope="col"><span class="sr-only">Actions</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for customer in customers %}
+        <tr data-row
+            data-search="{{ (customer.name ~ ' ' ~ (customer.phone or '') ~ ' ' ~ (customer.notes or ''))|lower }}"
+            data-name="{{ customer.name|lower }}"
+            data-balance="{{ customer.balance }}"
+            data-lastpay="{{ customer.last_payment_at or '' }}"
+            data-lastactivity="{{ customer.last_activity_at or '' }}"
+            data-created="{{ customer.created_at or '' }}">
+          <td data-th="Customer">
+            <a class="row-link" href="{{ url_for('customer_detail', customer_id=customer.id) }}">
+              <span class="row-title">{{ customer.name }}</span>
+            </a>
+            <div class="row-sub">{{ customer.phone or 'No phone on file' }}{% if customer.notes %} · {{ customer.notes|truncate(46) }}{% endif %}</div>
+          </td>
+          <td data-th="Status">{{ ui.account_badge(customer.balance) }}</td>
+          <td data-th="Credit taken" class="num"><span class="amount amount-muted">{{ customer.total_debt|cop }}</span></td>
+          <td data-th="Paid" class="num"><span class="amount amount-muted">{{ customer.total_paid|cop }}</span></td>
+          <td data-th="Balance due" class="num">
+            <span class="amount {% if customer.balance > 0 %}amount-due{% else %}amount-muted{% endif %}">{{ customer.balance|cop }}</span>
+          </td>
+          <td data-th="Last payment">
+            {% if customer.last_payment_at %}{{ customer.last_payment_at|day }}{% else %}<span class="muted">—</span>{% endif %}
+          </td>
+          <td data-th="">
+            <div class="row-actions">
+              {% if customer.balance > 0 %}<a class="btn btn-sm btn-gold" href="{{ url_for('customer_detail', customer_id=customer.id, action='pay') }}"><i data-lucide="hand-coins"></i>Payment</a>{% endif %}
+              <a class="btn btn-sm btn-primary" href="{{ url_for('customer_detail', customer_id=customer.id) }}"><i data-lucide="book-open"></i>Open</a>
+              <a class="btn btn-sm" href="{{ url_for('customer_report', customer_id=customer.id) }}"><i data-lucide="printer"></i>Statement</a>
+              <a class="btn btn-sm btn-ghost" href="{{ url_for('edit_customer', customer_id=customer.id) }}" aria-label="Edit {{ customer.name }}"><i data-lucide="pencil"></i></a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if customers %}
+    <div data-registry-empty hidden>
+      {{ ui.empty_state('No matches', 'No customer matches this search or filter. Clear the filter or try another spelling.') }}
+    </div>
+  {% else %}
+    {% call ui.empty_state('The registry is empty', 'Add your first customer to open their account in the house ledger.') %}
+      <a class="btn btn-primary" href="{{ url_for('add_customer') }}"><i data-lucide="user-plus"></i>Add first customer</a>
+    {% endcall %}
+  {% endif %}
+</section>
+
+{% endblock %}

@@ -1,0 +1,21 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Local databases and customer/business data
+*.db
+*.sqlite
+*.sqlite3
+
+# Local secrets and machine-specific configuration
+.env
+.env.*
+!.env.example
+instance/
+
+# Generated tool and OS files
+.hallmark/
+.DS_Store
+Thumbs.db
+*.log

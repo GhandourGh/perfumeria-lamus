@@ -1,0 +1,25 @@
+{% extends "_auth.html" %}
+{% block title %}Sign in · Perfumería Lamus{% endblock %}
+{% block card %}
+  <div class="eyebrow">Owner access</div>
+  <h1>Welcome back</h1>
+  <p class="lede">Sign in to open the store ledger.</p>
+  <form method="post" data-guard>
+    <label class="field">
+      <span>Username</span>
+      <div class="field-input">
+        <i data-lucide="user-round"></i>
+        <input name="username" autocomplete="username" autofocus required>
+      </div>
+    </label>
+    <label class="field">
+      <span>Password</span>
+      <div class="field-input">
+        <i data-lucide="lock"></i>
+        <input name="password" type="password" autocomplete="current-password" required>
+      </div>
+    </label>
+    <button class="btn btn-primary" type="submit"><i data-lucide="key-round"></i>Sign in</button>
+  </form>
+  <p class="auth-links"><a href="{{ url_for('forgot_password') }}">Forgot your password?</a></p>
+{% endblock %}

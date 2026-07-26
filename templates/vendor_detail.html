@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+{% block title %}{{ vendor.name }} · Perfumería Lamus{% endblock %}
+{% block body_attrs %} data-section="vendor"{% endblock %}
+{% block content %}
+
+<header class="page-head">
+  <div class="identity">
+    <div class="identity-seal" aria-hidden="true">{{ vendor.name[:2]|upper }}</div>
+    <div class="identity-meta">
+      <div class="eyebrow">Vendor account</div>
+      <h1>{{ vendor.name }}</h1>
+      <div class="contact">
+        <span><i data-lucide="phone"></i>{{ vendor.phone or 'No phone on file' }}</span>
+        <span>
+          {% if balance > 0 %}<span class="badge badge-due">Payable</span>{% else %}<span class="badge badge-settled">Settled</span>{% endif %}
+        </span>
+      </div>
+    </div>
+  </div>
+  <div class="page-actions">
+    <button class="btn btn-gold" type="button" data-open-sheet="sheet-vendor-payment" {% if balance <= 0 %}disabled title="Nothing is payable to this vendor"{% endif %}>
+      <i data-lucide="hand-coins"></i>Record payment sent
+    </button>
+    <button class="btn btn-primary" type="button" data-open-sheet="sheet-purchase">
+      <i data-lucide="package-plus"></i>Record stock purchase
+    </button>
+    <a class="btn" href="{{ url_for('vendor_report', vendor_id=vendor.id) }}"><i data-lucide="printer"></i>Statement</a>
+    <a class="btn btn-ghost" href="{{ url_for('edit_vendor', vendor_id=vendor.id) }}"><i data-lucide="pencil"></i>Edit</a>
+  </div>
+</header>
+
+<section class="grid grid-3" aria-label="Account summary">
+  <div class="stat">
+    <div class="stat-label">Payable now</div>
+    <div class="stat-value {% if balance > 0 %}is-due{% endif %}">{{ balance|cop }}</div>
+    <div class="stat-note">{% if balance > 0 %}Owed by the store{% else %}Nothing outstanding{% endif %}</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Purchased to date</div>
+    <div class="stat-value">{{ (vendor.total_purchased or 0)|cop }}</div>
+    <div class="stat-note">Lifetime stock purchases</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Paid to date</div>
+    <div class="stat-value {% if vendor.total_paid and vendor.total_paid > 0 %}is-good{% endif %}">{{ (vendor.total_paid or 0)|cop }}</div>
+    <div class="stat-note">
+      {% if vendor.last_payment_at %}Last payment {{ vendor.last_payment_at|day }}{% else %}No payments yet{% endif %}
+    </div>
+  </div>
+</section>
+
+{% if vendor.notes %}
+<section class="panel" style="margin-top: var(--space-5)">
+  <div class="panel-head"><h2>Notes</h2></div>
+  <p class="muted">{{ vendor.notes }}</p>
+</section>
+{% endif %}
+
+{% set ledger_kind = 'vendor' %}
+{% set ledger_owner_id = vendor.id %}
+{% include "_ledger_table.html" %}
+
+{# ------- Record stock purchase ------- #}
+<dialog class="sheet" id="sheet-purchase" aria-labelledby="sheet-purchase-title">
+  <div class="sheet-head">
+    <i data-lucide="package-plus"></i>
+    <h2 id="sheet-purchase-title">Record stock purchase</h2>
+    <button class="sheet-close" type="button" data-close-sheet aria-label="Close"><i data-lucide="x"></i></button>
+  </div>
+  <form method="post" action="{{ url_for('add_purchase', vendor_id=vendor.id) }}"
+        data-guard data-preview data-kind="charge" data-balance="{{ balance }}">
+    <div class="sheet-body form-grid">
+      <label class="field">
+        <span>Purchase amount</span>
+        <div class="money-input">
+          <input name="amount" type="number" inputmode="numeric" step="1" min="1" required autocomplete="off" placeholder="0">
+        </div>
+      </label>
+      <label class="field">
+        <span>What was purchased <em class="optional">optional</em></span>
+        <input name="description" placeholder="e.g. Assorted fragrances — 24 units" maxlength="120">
+      </label>
+      <label class="field">
+        <span>Notes <em class="optional">optional</em></span>
+        <textarea name="notes" rows="2" placeholder="Invoice number, order details…"></textarea>
+      </label>
+      <div class="preview-strip" aria-live="polite">
+        <div class="preview-line"><span>Payable today</span><strong data-preview-current>{{ balance|cop }}</strong></div>
+        <div class="preview-line"><span>This purchase</span><strong data-preview-entry>$0</strong></div>
+        <div class="preview-line preview-result"><span>New payable</span><strong data-preview-result>{{ balance|cop }}</strong></div>
+      </div>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn" type="button" data-close-sheet>Cancel</button>
+      <button class="btn btn-primary" type="submit"><i data-lucide="package-plus"></i>Add to account</button>
+    </div>
+  </form>
+</dialog>
+
+{# ------- Record payment sent ------- #}
+<dialog class="sheet" id="sheet-vendor-payment" aria-labelledby="sheet-vendor-payment-title">
+  <div class="sheet-head">
+    <i data-lucide="hand-coins"></i>
+    <h2 id="sheet-vendor-payment-title">Record payment sent</h2>
+    <button class="sheet-close" type="button" data-close-sheet aria-label="Close"><i data-lucide="x"></i></button>
+  </div>
+  <form method="post" action="{{ url_for('add_vendor_payment', vendor_id=vendor.id) }}"
+        data-guard data-preview data-kind="payment" data-balance="{{ balance }}">
+    <div class="sheet-body form-grid">
+      <div class="form-row">
+        <label class="field">
+          <span>Payment amount</span>
+          <div class="money-input">
+            <input name="amount" type="number" inputmode="numeric" step="1" min="1" max="{{ balance|int }}" required autocomplete="off" placeholder="0">
+          </div>
+          <button class="fill-balance" type="button" data-fill-balance>Pay full payable · {{ balance|cop }}</button>
+        </label>
+        <label class="field">
+          <span>Payment method</span>
+          <select name="payment_method">
+            <option value="CASH">Cash</option>
+            <option value="BANK_TRANSFER">Bank transfer</option>
+            <option value="CARD">Card</option>
+            <option value="CHECK">Check</option>
+            <option value="SPLIT">Split</option>
+          </select>
+          <span class="field-help">Bank transfers are also deducted from the bank balance.</span>
+        </label>
+      </div>
+      <label class="field">
+        <span>Notes <em class="optional">optional</em></span>
+        <textarea name="notes" rows="2" placeholder="Invoice or transfer reference…"></textarea>
+      </label>
+      <div class="preview-strip" aria-live="polite">
+        <div class="preview-line"><span>Payable today</span><strong data-preview-current>{{ balance|cop }}</strong></div>
+        <div class="preview-line"><span>This payment</span><strong data-preview-entry>$0</strong></div>
+        <div class="preview-line preview-result"><span>Remaining payable</span><strong data-preview-result>{{ balance|cop }}</strong></div>
+      </div>
+      <p class="field-help" data-preview-warning hidden style="color: var(--garnet)">
+        <strong>This payment is larger than the payable balance.</strong> Reduce the amount.
+      </p>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn" type="button" data-close-sheet>Cancel</button>
+      <button class="btn btn-gold" type="submit"><i data-lucide="hand-coins"></i>Record payment</button>
+    </div>
+  </form>
+</dialog>
+
+{% endblock %}

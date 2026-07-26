@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+{% import "_macros.html" as ui %}
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ person.name }} — {{ kind }} statement · Perfumería Lamus</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='statement.css') }}">
+  <script src="{{ url_for('static', filename='vendor/lucide/lucide.min.js') }}" defer></script>
+</head>
+<body>
+
+<div class="statement-toolbar">
+  {% if kind == 'Customer' %}
+    <a href="{{ url_for('customer_detail', customer_id=person.id) }}"><i data-lucide="arrow-left"></i>Back to account</a>
+  {% else %}
+    <a href="{{ url_for('vendor_detail', vendor_id=person.id) }}"><i data-lucide="arrow-left"></i>Back to account</a>
+  {% endif %}
+  <span class="grow"></span>
+  <button class="primary" type="button" data-print><i data-lucide="printer"></i>Print statement</button>
+</div>
+
+<article class="sheet">
+  <header class="letterhead">
+    {% include "_logo.html" %}
+    <div>
+      <div class="letterhead-name">Perfumería Lamus</div>
+      <div class="letterhead-sub">Maison Ledger</div>
+    </div>
+    <div class="letterhead-meta">
+      <div class="doc-title">{{ 'Customer statement' if kind == 'Customer' else 'Vendor statement' }}</div>
+      <div>Issued {{ today_display }}</div>
+      <div>Account nº {{ '%s-%04d'|format('C' if kind == 'Customer' else 'V', person.id) }}</div>
+    </div>
+  </header>
+
+  <section class="parties">
+    <div>
+      <div class="party-label">{{ 'Statement for' if kind == 'Customer' else 'Supplier' }}</div>
+      <div class="party-name">{{ person.name }}</div>
+      <div class="party-line">{{ person.phone or 'No phone on file' }}</div>
+      {% if person.notes %}<div class="party-line">{{ person.notes }}</div>{% endif %}
+      {% if person.created_at %}<div class="party-line">Account since {{ person.created_at|day }}</div>{% endif %}
+    </div>
+    <div class="balance-box">
+      <div class="party-label">{{ 'Balance due' if kind == 'Customer' else 'Payable' }}</div>
+      <div class="balance-amount {{ 'due' if balance > 0 else 'settled' }}">{{ balance|cop }}</div>
+      {% if balance <= 0 %}
+        <div class="party-line">Account settled — thank you</div>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="totals-line">
+    <div>
+      <div class="party-label">{{ 'Credit taken' if kind == 'Customer' else 'Purchased' }}</div>
+      <div class="total-value">{{ (person.total_debt if kind == 'Customer' else person.total_purchased)|default(0, true)|cop }}</div>
+    </div>
+    <div>
+      <div class="party-label">Paid to date</div>
+      <div class="total-value">{{ (person.total_paid or 0)|cop }}</div>
+    </div>
+    <div>
+      <div class="party-label">{{ 'Balance due' if kind == 'Customer' else 'Payable' }}</div>
+      <div class="total-value {{ 'due-amt' if balance > 0 }}">{{ balance|cop }}</div>
+    </div>
+  </section>
+
+  <h2 class="ledger-title">Account history</h2>
+  {% if ledger %}
+  <div class="sheet-scroll">
+    <table class="ledger">
+      <thead>
+        <tr>
+          <th scope="col">Date</th>
+          <th scope="col">Entry</th>
+          <th scope="col">Detail</th>
+          <th scope="col">Status</th>
+          <th scope="col" class="num">Amount</th>
+          <th scope="col" class="num">Balance</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in ledger|reverse %}
+        <tr {% if row.is_voided %}class="voided"{% endif %}>
+          <td style="white-space:nowrap">{{ row.created_at|day }}</td>
+          <td class="entry">{{ ui.entry_label(row.entry_type) }}{% if row.is_voided %} (voided){% endif %}
+            {% if row.payment_method %}<div class="sub">{{ ui.method_label(row.payment_method) }}</div>{% endif %}
+          </td>
+          <td>
+            {% for item in row['items'] %}{% if item.quantity != 1 %}{{ item.quantity }} × {% endif %}{{ item.product_name }}{% if not loop.last %}, {% endif %}{% endfor %}
+            {% if row.due_date %}<div class="sub">Due {{ row.due_date|day }}</div>{% endif %}
+            {% set item_names = row['items']|map(attribute='product_name')|list %}
+            {% if row.notes %}<div class="sub">{{ row.notes }}</div>
+            {% elif row.description and row.description not in item_names %}<div class="sub">{{ row.description }}</div>{% endif %}
+          </td>
+          <td>
+            {%- if row.is_voided %}—
+            {%- elif row.entry_type in ('NEW_DEBT','NEW_PURCHASE') -%}
+              {%- if row.payment_status == 'PAID' %}Paid
+              {%- elif row.payment_status == 'PARTIAL' %}Partial · {{ row.remaining_amount|cop }} left
+              {%- else %}Open{% endif -%}
+            {%- endif -%}
+          </td>
+          <td class="num {% if row.entry_type in ('PAYMENT','PAYMENT_MADE') %}good-amt{% elif row.entry_type in ('NEW_DEBT','NEW_PURCHASE') %}due-amt{% endif %}">
+            {%- if row.entry_type in ('PAYMENT','PAYMENT_MADE','REFUND','WRITE_OFF') %}−{% else %}+{% endif %} {{ row.amount|cop }}
+          </td>
+          <td class="num">{% if row.balance_after is not none %}{{ row.balance_after|cop }}{% else %}—{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="4">{{ 'Balance due' if kind == 'Customer' else 'Payable' }} as of {{ today_display }}</td>
+          <td></td>
+          <td class="num {{ 'due-amt' if balance > 0 }}">{{ balance|cop }}</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+  {% else %}
+  <div class="ledger-empty">No account movements recorded yet.</div>
+  {% endif %}
+
+  <section class="sign-row">
+    <div>
+      <div class="sign-line"></div>
+      <div class="sign-caption">Perfumería Lamus</div>
+    </div>
+    <div>
+      <div class="sign-line"></div>
+      <div class="sign-caption">{{ 'Customer signature' if kind == 'Customer' else 'Vendor signature' }}</div>
+    </div>
+  </section>
+
+  <footer class="statement-foot">
+    <span>Perfumería Lamus · Maison Ledger</span>
+    <span>Generated {{ now_display }}</span>
+  </footer>
+</article>
+
+<script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</body>
+</html>
