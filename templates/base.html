@@ -29,9 +29,9 @@
           <i data-lucide="users" aria-hidden="true"></i><span>Customers</span><i class="nav-chevron" data-lucide="chevron-down" aria-hidden="true"></i>
         </summary>
         <div class="nav-menu-panel">
-          <a href="{{ url_for('dashboard') }}"><i data-lucide="layout-dashboard" aria-hidden="true"></i><span><strong>Overview</strong></span></a>
-          <a href="{{ url_for('customers') }}"><i data-lucide="contact-round" aria-hidden="true"></i><span><strong>All customers</strong></span></a>
-          <a href="{{ url_for('add_customer') }}"><i data-lucide="user-plus" aria-hidden="true"></i><span><strong>New customer</strong></span></a>
+          <a class="{% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}"><i data-lucide="layout-dashboard" aria-hidden="true"></i><span><strong>Overview</strong></span></a>
+          <a class="{% if request.endpoint in ('customers', 'customer_detail', 'edit_customer', 'customer_report') %}active{% endif %}" href="{{ url_for('customers') }}"><i data-lucide="contact-round" aria-hidden="true"></i><span><strong>All customers</strong></span></a>
+          <a class="{% if request.endpoint == 'add_customer' %}active{% endif %}" href="{{ url_for('add_customer') }}"><i data-lucide="user-plus" aria-hidden="true"></i><span><strong>New customer</strong></span></a>
         </div>
       </details>
 
@@ -40,9 +40,9 @@
           <i data-lucide="package" aria-hidden="true"></i><span>Vendors</span><i class="nav-chevron" data-lucide="chevron-down" aria-hidden="true"></i>
         </summary>
         <div class="nav-menu-panel">
-          <a href="{{ url_for('vendor_overview') }}"><i data-lucide="layout-dashboard" aria-hidden="true"></i><span><strong>Overview</strong></span></a>
-          <a href="{{ url_for('vendors') }}"><i data-lucide="boxes" aria-hidden="true"></i><span><strong>All vendors</strong></span></a>
-          <a href="{{ url_for('add_vendor') }}"><i data-lucide="package-plus" aria-hidden="true"></i><span><strong>New vendor</strong></span></a>
+          <a class="{% if request.endpoint == 'vendor_overview' %}active{% endif %}" href="{{ url_for('vendor_overview') }}"><i data-lucide="layout-dashboard" aria-hidden="true"></i><span><strong>Overview</strong></span></a>
+          <a class="{% if request.endpoint in ('vendors', 'vendor_detail', 'edit_vendor', 'vendor_report') %}active{% endif %}" href="{{ url_for('vendors') }}"><i data-lucide="boxes" aria-hidden="true"></i><span><strong>All vendors</strong></span></a>
+          <a class="{% if request.endpoint == 'add_vendor' %}active{% endif %}" href="{{ url_for('add_vendor') }}"><i data-lucide="package-plus" aria-hidden="true"></i><span><strong>New vendor</strong></span></a>
         </div>
       </details>
 
@@ -51,10 +51,10 @@
           <i data-lucide="menu" aria-hidden="true"></i><span>More</span><i class="nav-chevron" data-lucide="chevron-down" aria-hidden="true"></i>
         </summary>
         <div class="nav-menu-panel nav-menu-panel-wide">
-          <a href="{{ url_for('bank') }}"><i data-lucide="landmark" aria-hidden="true"></i><span><strong>Bank</strong></span></a>
-          <a href="{{ url_for('reports') }}"><i data-lucide="printer" aria-hidden="true"></i><span><strong>Reports</strong></span></a>
-          <a href="{{ url_for('backups') }}"><i data-lucide="database-backup" aria-hidden="true"></i><span><strong>Backup & restore</strong></span></a>
-          <a href="{{ url_for('security') }}"><i data-lucide="shield-check" aria-hidden="true"></i><span><strong>Security</strong></span></a>
+          <a class="{% if request.endpoint == 'bank' %}active{% endif %}" href="{{ url_for('bank') }}"><i data-lucide="landmark" aria-hidden="true"></i><span><strong>Bank</strong></span></a>
+          <a class="{% if request.endpoint == 'reports' %}active{% endif %}" href="{{ url_for('reports') }}"><i data-lucide="printer" aria-hidden="true"></i><span><strong>Reports</strong></span></a>
+          <a class="{% if request.endpoint in ('backups', 'download_backup') %}active{% endif %}" href="{{ url_for('backups') }}"><i data-lucide="database-backup" aria-hidden="true"></i><span><strong>Backup & restore</strong></span></a>
+          <a class="{% if request.endpoint == 'security' %}active{% endif %}" href="{{ url_for('security') }}"><i data-lucide="shield-check" aria-hidden="true"></i><span><strong>Security</strong></span></a>
         </div>
       </details>
 
