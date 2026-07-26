@@ -438,6 +438,91 @@ def _recompute_customer_ledger(cur, customer_id):
     _rebuild_balance_after(cur, "ledger", "customer_id", customer_id)
 
 
+def _validate_edited_balance(cur, table, owner_col, owner_id, entry_id, amount):
+    """Reject an edit that would make a payment exceed the balance available
+    at that point in the account history."""
+    rows = cur.execute(f"""
+        SELECT id, entry_type, amount FROM {table}
+        WHERE {owner_col} = ? AND is_voided = 0 AND is_deleted = 0
+        ORDER BY created_at ASC, id ASC
+    """, (owner_id,)).fetchall()
+    running = 0.0
+    for row in rows:
+        row_amount = amount if row["id"] == entry_id else float(row["amount"])
+        running = round(running + _BALANCE_SIGN.get(row["entry_type"], 0) * row_amount, 2)
+        if running < 0:
+            raise ValueError("This edit would make a payment exceed the balance available at that time")
+
+
+def _update_single_ledger_item(cur, item_table, foreign_key, entry_id, amount, description):
+    items = cur.execute(
+        f"SELECT id, product_name FROM {item_table} WHERE {foreign_key} = ? ORDER BY id",
+        (entry_id,),
+    ).fetchall()
+    if len(items) > 1:
+        raise ValueError("Multi-item entries cannot be edited from this screen")
+    if items:
+        product_name = (description or "").strip() or items[0]["product_name"]
+        cur.execute(
+            f"UPDATE {item_table} SET product_name = ?, price = ?, quantity = 1 WHERE id = ?",
+            (product_name, amount, items[0]["id"]),
+        )
+
+
+def edit_customer_entry(entry_id, expected_customer_id, amount, description=None,
+                        notes=None, payment_method=None, due_date=None, user_id=None):
+    amount = round(float(amount), 2)
+    if amount <= 0:
+        raise ValueError("Amount must be positive")
+    with get_db() as conn:
+        cur = conn.cursor()
+        row = cur.execute(
+            "SELECT * FROM ledger WHERE id = ? AND is_deleted = 0",
+            (entry_id,),
+        ).fetchone()
+        if row is None or row["customer_id"] != expected_customer_id:
+            raise ValueError("Entry not found")
+        if row["is_voided"]:
+            raise ValueError("Voided entries cannot be edited")
+        if row["entry_type"] not in {"NEW_DEBT", "PAYMENT"}:
+            raise ValueError("This entry type cannot be edited")
+
+        _validate_edited_balance(
+            cur, "ledger", "customer_id", expected_customer_id, entry_id, amount
+        )
+        clean_notes = (notes or "").strip() or None
+        if row["entry_type"] == "NEW_DEBT":
+            clean_description = (description or "").strip() or None
+            _update_single_ledger_item(
+                cur, "ledger_items", "ledger_id", entry_id, amount, clean_description
+            )
+            cur.execute("""
+                UPDATE ledger
+                SET amount = ?, description = ?, notes = ?, due_date = ?
+                WHERE id = ?
+            """, (amount, clean_description, clean_notes, due_date or None, entry_id))
+        else:
+            method = payment_method if payment_method in {
+                "CASH", "CARD", "CHECK", "BANK_TRANSFER", "SPLIT"
+            } else "CASH"
+            cur.execute("""
+                UPDATE ledger
+                SET amount = ?, payment_method = ?, notes = ?
+                WHERE id = ?
+            """, (amount, method, clean_notes, entry_id))
+
+        _recompute_customer_ledger(cur, expected_customer_id)
+        log_audit(
+            user_id,
+            "EDIT_CUSTOMER_ENTRY",
+            "ledger",
+            entry_id,
+            f"Amount: {row['amount']} -> {amount}",
+            conn,
+        )
+        conn.commit()
+
+
 def void_customer_entry(entry_id, expected_customer_id=None, user_id=None, reason=None):
     with get_db() as conn:
         cur = conn.cursor()
@@ -562,6 +647,82 @@ def _recompute_vendor_ledger(cur, vendor_id):
     for p in payments:
         _apply_fifo_for_vendor_payment(cur, vendor_id, p["amount"])
     _rebuild_balance_after(cur, "vendor_ledger", "vendor_id", vendor_id)
+
+
+def edit_vendor_entry(entry_id, expected_vendor_id, amount, description=None,
+                      notes=None, payment_method=None, user_id=None):
+    amount = round(float(amount), 2)
+    if amount <= 0:
+        raise ValueError("Amount must be positive")
+    with get_db() as conn:
+        cur = conn.cursor()
+        row = cur.execute(
+            "SELECT * FROM vendor_ledger WHERE id = ? AND is_deleted = 0",
+            (entry_id,),
+        ).fetchone()
+        if row is None or row["vendor_id"] != expected_vendor_id:
+            raise ValueError("Entry not found")
+        if row["is_voided"]:
+            raise ValueError("Voided entries cannot be edited")
+        if row["entry_type"] not in {"NEW_PURCHASE", "PAYMENT_MADE"}:
+            raise ValueError("This entry type cannot be edited")
+
+        _validate_edited_balance(
+            cur, "vendor_ledger", "vendor_id", expected_vendor_id, entry_id, amount
+        )
+        clean_notes = (notes or "").strip() or None
+        if row["entry_type"] == "NEW_PURCHASE":
+            clean_description = (description or "").strip() or None
+            _update_single_ledger_item(
+                cur,
+                "vendor_ledger_items",
+                "vendor_ledger_id",
+                entry_id,
+                amount,
+                clean_description,
+            )
+            cur.execute("""
+                UPDATE vendor_ledger
+                SET amount = ?, description = ?, notes = ?
+                WHERE id = ?
+            """, (amount, clean_description, clean_notes, entry_id))
+        else:
+            method = payment_method if payment_method in {
+                "CASH", "CARD", "CHECK", "BANK_TRANSFER", "SPLIT"
+            } else "CASH"
+            old_bank_amount = float(row["amount"]) if row["payment_method"] == "BANK_TRANSFER" else 0
+            new_bank_amount = amount if method == "BANK_TRANSFER" else 0
+            bank_delta = round(old_bank_amount - new_bank_amount, 2)
+            cur.execute("""
+                UPDATE vendor_ledger
+                SET amount = ?, payment_method = ?, notes = ?
+                WHERE id = ?
+            """, (amount, method, clean_notes, entry_id))
+            if bank_delta:
+                change_type = "ADD" if bank_delta > 0 else "REMOVE"
+                cur.execute("""
+                    INSERT INTO bank_balance_log
+                    (bank_account_id, balance, change_amount, change_type, note, recorded_by, created_at)
+                    VALUES (1, ?, ?, ?, ?, ?, ?)
+                """, (
+                    _get_current_bank_balance(cur) + bank_delta,
+                    abs(bank_delta),
+                    change_type,
+                    f"Adjustment: edited vendor payment #{entry_id}",
+                    user_id,
+                    now(),
+                ))
+
+        _recompute_vendor_ledger(cur, expected_vendor_id)
+        log_audit(
+            user_id,
+            "EDIT_VENDOR_ENTRY",
+            "vendor_ledger",
+            entry_id,
+            f"Amount: {row['amount']} -> {amount}",
+            conn,
+        )
+        conn.commit()
 
 
 def void_vendor_entry(entry_id, expected_vendor_id=None, user_id=None, reason=None):

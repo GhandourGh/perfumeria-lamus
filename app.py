@@ -287,6 +287,26 @@ def add_payment(customer_id):
     return redirect(url_for("customer_detail", customer_id=customer_id))
 
 
+@app.route("/customers/<int:customer_id>/ledger/<int:entry_id>/edit", methods=["POST"])
+@login_required
+def edit_customer_ledger(customer_id, entry_id):
+    try:
+        db.edit_customer_entry(
+            entry_id,
+            customer_id,
+            request.form.get("amount") or 0,
+            description=request.form.get("description"),
+            notes=request.form.get("notes"),
+            payment_method=request.form.get("payment_method"),
+            due_date=request.form.get("due_date"),
+            user_id=current_user_id(),
+        )
+        flash("Ledger entry updated and balances recalculated.", "success")
+    except ValueError as exc:
+        flash(str(exc), "error")
+    return redirect(url_for("customer_detail", customer_id=customer_id))
+
+
 @app.route("/customers/<int:customer_id>/ledger/<int:entry_id>/void", methods=["POST"])
 @login_required
 def void_customer_ledger(customer_id, entry_id):
@@ -392,6 +412,25 @@ def add_vendor_payment(vendor_id):
     try:
         db.add_vendor_payment(vendor_id, float(request.form.get("amount") or 0), request.form.get("payment_method") or "CASH", request.form.get("notes"), current_user_id())
         flash("Vendor payment recorded.", "success")
+    except ValueError as exc:
+        flash(str(exc), "error")
+    return redirect(url_for("vendor_detail", vendor_id=vendor_id))
+
+
+@app.route("/vendors/<int:vendor_id>/ledger/<int:entry_id>/edit", methods=["POST"])
+@login_required
+def edit_vendor_ledger(vendor_id, entry_id):
+    try:
+        db.edit_vendor_entry(
+            entry_id,
+            vendor_id,
+            request.form.get("amount") or 0,
+            description=request.form.get("description"),
+            notes=request.form.get("notes"),
+            payment_method=request.form.get("payment_method"),
+            user_id=current_user_id(),
+        )
+        flash("Ledger entry updated and balances recalculated.", "success")
     except ValueError as exc:
         flash(str(exc), "error")
     return redirect(url_for("vendor_detail", vendor_id=vendor_id))

@@ -230,6 +230,69 @@
     });
   });
 
+  /* ---------- Confirmed ledger editing ---------- */
+
+  (function () {
+    var editDialog = document.getElementById("sheet-edit-ledger");
+    var confirmDialog = document.getElementById("sheet-confirm-ledger-edit");
+    var form = document.getElementById("ledger-edit-form");
+    if (!editDialog || !confirmDialog || !form) return;
+
+    var amount = form.querySelector('[name="amount"]');
+    var description = form.querySelector('[name="description"]');
+    var notes = form.querySelector('[name="notes"]');
+    var method = form.querySelector('[name="payment_method"]');
+    var dueDate = form.querySelector('[name="due_date"]');
+    var descriptionField = form.querySelector("[data-edit-description-field]");
+    var methodField = form.querySelector("[data-edit-method-field]");
+    var dueDateField = form.querySelector("[data-edit-due-date-field]");
+
+    document.querySelectorAll("[data-edit-ledger]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var isPayment = button.dataset.entryKind === "payment";
+        form.reset();
+        form.action = button.dataset.action;
+        form.dataset.confirmed = "false";
+        form.dataset.entryLabel = button.dataset.entryLabel || "Ledger entry";
+        amount.value = button.dataset.amount || "";
+        description.value = button.dataset.description || "";
+        notes.value = button.dataset.notes || "";
+        method.value = button.dataset.paymentMethod || "CASH";
+        dueDate.value = button.dataset.dueDate || "";
+        descriptionField.hidden = isPayment;
+        methodField.hidden = !isPayment;
+        dueDateField.hidden = button.dataset.supportsDueDate !== "true";
+        editDialog.showModal();
+        amount.focus();
+      });
+    });
+
+    form.addEventListener("submit", function (event) {
+      if (form.dataset.confirmed === "true") return;
+      event.preventDefault();
+      var label = confirmDialog.querySelector("[data-confirm-entry-label]");
+      var value = confirmDialog.querySelector("[data-confirm-entry-amount]");
+      if (label) label.textContent = form.dataset.entryLabel || "Ledger entry";
+      if (value) value.textContent = formatCOP(amount.value);
+      confirmDialog.showModal();
+      var confirmButton = confirmDialog.querySelector("[data-confirm-ledger-edit]");
+      if (confirmButton) confirmButton.focus();
+    });
+
+    confirmDialog.querySelectorAll("[data-close-confirm-edit]").forEach(function (button) {
+      button.addEventListener("click", function () { confirmDialog.close(); });
+    });
+
+    var confirmButton = confirmDialog.querySelector("[data-confirm-ledger-edit]");
+    if (confirmButton) {
+      confirmButton.addEventListener("click", function () {
+        form.dataset.confirmed = "true";
+        confirmDialog.close();
+        form.requestSubmit();
+      });
+    }
+  })();
+
   /* ---------- Print buttons ---------- */
 
   document.querySelectorAll("[data-print]").forEach(function (btn) {
