@@ -168,25 +168,18 @@ def init_db():
         c.execute("SELECT COUNT(*) FROM users")
         if c.fetchone()[0] == 0:
             initial_password = os.environ.get("INITIAL_ADMIN_PASSWORD", "")
-            recovery_answer = os.environ.get("INITIAL_ADMIN_SECURITY_ANSWER", "")
-            if len(initial_password) < 12:
+            if len(initial_password) < 8:
                 raise RuntimeError(
-                    "First run requires INITIAL_ADMIN_PASSWORD with at least 12 characters."
-                )
-            if len(recovery_answer.strip()) < 8:
-                raise RuntimeError(
-                    "First run requires INITIAL_ADMIN_SECURITY_ANSWER with at least 8 characters."
+                    "First run requires INITIAL_ADMIN_PASSWORD with at least 8 characters."
                 )
             c.execute("""
-                INSERT INTO users (username, password_hash, full_name, role, security_question, security_answer_hash)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO users (username, password_hash, full_name, role)
+                VALUES (?, ?, ?, ?)
             """, (
-                os.environ.get("INITIAL_ADMIN_USERNAME", "admin").strip() or "admin",
+                os.environ.get("INITIAL_ADMIN_USERNAME", "busalim").strip() or "busalim",
                 generate_password_hash(initial_password),
-                os.environ.get("INITIAL_ADMIN_NAME", "Store Owner").strip() or "Store Owner",
+                os.environ.get("INITIAL_ADMIN_NAME", "BU SALIM").strip() or "BU SALIM",
                 "owner",
-                os.environ.get("INITIAL_ADMIN_SECURITY_QUESTION", "What is your private recovery phrase?"),
-                generate_password_hash(normalize_security_answer(recovery_answer)),
             ))
         conn.commit()
 

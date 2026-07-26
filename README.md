@@ -10,24 +10,51 @@ bronze rules, serif numerals, and a charcoal-noir navigation cabinet.
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 export INITIAL_ADMIN_PASSWORD='choose-a-private-password'
-export INITIAL_ADMIN_SECURITY_ANSWER='choose-a-private-recovery-answer'
 .venv/bin/python app.py
 ```
 
 Open `http://127.0.0.1:5001`.
 
-On a brand-new database, the first-run environment values create the owner
-account. Both private values must be at least 12 and 8 characters respectively.
-They are only used when there are no users yet.
+On a brand-new database, the first-run environment value creates the owner
+account. The password must be at least 8 characters. It is only used when there
+are no users yet.
 
-- Username defaults to `admin`. Override it with `INITIAL_ADMIN_USERNAME`.
-- Owner name defaults to `Store Owner`. Override it with `INITIAL_ADMIN_NAME`.
-- The recovery question can be overridden with `INITIAL_ADMIN_SECURITY_QUESTION`.
+- Username defaults to `busalim`. Override it with `INITIAL_ADMIN_USERNAME`.
+- Owner name defaults to `BU SALIM`. Override it with `INITIAL_ADMIN_NAME`.
 - Set `SECRET_KEY` in the environment if desired. Otherwise the app creates a
   strong machine-local key under the ignored `instance/` directory.
 
 Never commit the SQLite database, `.env` files, or the generated `instance/`
 directory. They contain business data or private authentication material.
+
+## Install on a new MacBook
+
+Install Apple's command-line tools and clone the app:
+
+```bash
+xcode-select --install
+git clone https://github.com/GhandourGh/perfumeria-lamus.git
+cd perfumeria-lamus
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+```
+
+For a fresh empty installation, create the owner and start Lamus:
+
+```bash
+export INITIAL_ADMIN_USERNAME='busalim'
+export INITIAL_ADMIN_NAME='BU SALIM'
+export INITIAL_ADMIN_PASSWORD='choose-a-private-password'
+.venv/bin/python app.py
+```
+
+Open `http://127.0.0.1:5001`. Keep the Terminal window open while using Lamus.
+
+To move the current store records instead of starting empty, close Lamus on
+both computers and copy `perfumeria_lamus.db` from the old app folder into the
+same folder on the new MacBook. Also copy the ignored `instance` folder if old
+`.lamusbackup` files must remain restorable on the new computer. Never upload
+either item to GitHub.
 
 ## Sections
 

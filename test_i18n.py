@@ -25,7 +25,7 @@ def authenticated_client(locale="es_CO"):
     with client.session_transaction() as session:
         session.update(
             user_id=1,
-            username="admin",
+            username="busalim",
             locale=locale,
             last_seen=9_999_999_999,
             csrf_token="test-token",
