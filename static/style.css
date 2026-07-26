@@ -1610,13 +1610,13 @@ dialog.sheet[open] { animation: sheet-in .22s ease both; }
 .backup-alert {
   display: flex; gap: var(--space-3); align-items: flex-start;
   padding: var(--space-4); margin-bottom: var(--space-5);
-  color: var(--danger); background: var(--danger-soft);
-  border: 1px solid var(--danger-line); border-radius: var(--radius-md);
+  color: var(--garnet-deep); background: var(--garnet-wash);
+  border: 1px solid var(--rule); border-radius: var(--radius);
 }
 .backup-alert svg, .privacy-note svg { flex: 0 0 auto; }
 .check-row {
   display: flex; align-items: flex-start; gap: var(--space-3);
-  padding: var(--space-4); border: 1px solid var(--line); border-radius: var(--radius-md);
+  padding: var(--space-4); border: 1px solid var(--hairline); border-radius: var(--radius);
   cursor: pointer;
 }
 .check-row input { margin-top: 4px; }
@@ -1630,7 +1630,7 @@ dialog.sheet[open] { animation: sheet-in .22s ease both; }
 }
 .privacy-note {
   display: flex; gap: var(--space-2); align-items: center;
-  color: var(--success); font-weight: 700;
+  color: var(--laurel-deep); font-weight: 700;
 }
 .restore-panel { margin-top: var(--space-5); }
 .restore-form {
