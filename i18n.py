@@ -310,6 +310,7 @@ DYNAMIC_PATTERNS = [
     (re.compile(r"^Prepared (.+)$"), r"Preparado el \1"),
     (re.compile(r"^Account since (.+)$"), r"Cuenta desde el \1"),
     (re.compile(r"^Payable as of (.+)$"), r"Saldo por pagar al \1"),
+    (re.compile(r"^Balance due as of (.+)$"), r"Saldo pendiente al \1"),
     (re.compile(r"^Account nº (.+)$"), r"Cuenta n.º \1"),
     (re.compile(r"^Amount: (.+)$"), r"Valor: \1"),
     (re.compile(r"^Archive (.+)\?$"), r"¿Archivar a \1?"),
