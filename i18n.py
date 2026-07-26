@@ -112,6 +112,7 @@ ES = {
     "Add Vendor": "Agregar proveedor", "Edit Vendor": "Editar proveedor",
     # Ledger
     "Account ledger": "Movimientos de la cuenta", "Edit ledger entry": "Editar movimiento",
+    "Opening balance": "Saldo inicial", "Opening purchase": "Compra inicial",
     "Correct the entry below. The account balance will be recalculated automatically.": "Corrige el movimiento. El saldo de la cuenta se recalculará automáticamente.",
     "Confirm this edit": "Confirmar esta edición",
     "This changes a financial record and recalculates the account balance.": "Esto modifica un registro financiero y recalcula el saldo de la cuenta.",
@@ -133,6 +134,9 @@ ES = {
     # Bank
     "Bank account": "Cuenta bancaria", "Current balance": "Saldo actual", "Add money": "Agregar dinero",
     "Remove money": "Retirar dinero", "Set balance": "Establecer saldo", "Record movement": "Registrar movimiento",
+    "Take money out": "Retirar dinero", "Office · Bancolombia": "Oficina · Bancolombia",
+    "Bancolombia & suppliers": "Bancolombia y proveedores", "Heads up:": "Atención:",
+    "recorded actions": "acciones registradas", "sign-ins": "ingresos",
     # Backup
     "Backup & recovery": "Copia y recuperación", "Save or restore a complete copy of the store records.": "Guarda o restaura una copia completa de los registros del negocio.",
     "MANUAL BACKUP": "COPIA MANUAL", "Save everything now": "Guardar todo ahora",
@@ -302,6 +306,7 @@ DYNAMIC_PATTERNS = [
     (re.compile(r"^Last payment (.+)$"), r"Último pago: \1"),
     (re.compile(r"^(\d+) of (\d+) vendors owed$"), r"Se debe a \1 de \2 proveedores"),
     (re.compile(r"^(\d+) entries · newest first$"), r"\1 movimientos · más recientes primero"),
+    (re.compile(r"^1 entry · newest first$"), r"1 movimiento · más reciente primero"),
     (re.compile(r"^Edit (.+)$"), r"Editar \1"),
     (re.compile(r"^Pay full balance · (.+)$"), r"Pagar saldo completo · \1"),
     (re.compile(r"^Pay full payable · (.+)$"), r"Pagar todo lo pendiente · \1"),

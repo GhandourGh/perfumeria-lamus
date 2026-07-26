@@ -1,4 +1,6 @@
+import html
 import re
+from pathlib import Path
 
 from bs4 import BeautifulSoup
 
@@ -11,7 +13,8 @@ ENGLISH_UI_WORDS = re.compile(
     r"\b(?:account|archive|backup|balance|bank|cancel|close|confirm|credit|"
     r"customer|date|edit|entry|file|generated|history|issued|movement|new|"
     r"note|open|owner|password|payable|payment|phone|prepared|purchase|"
-    r"report|restore|save|security|settled|signature|statement|vendor)\b",
+    r"report|restore|save|security|settled|signature|statement|vendor|take|"
+    r"money|suppliers|heads|actions|sign-ins|first|latest|largest|printable)\b",
     re.IGNORECASE,
 )
 
@@ -49,6 +52,38 @@ def test_spanish_is_the_default_locale():
     assert b'lang="es-CO"' in response.data
     assert "Bienvenido de nuevo" in response.get_data(as_text=True)
     assert "Welcome back" not in response.get_data(as_text=True)
+
+
+def test_every_static_template_phrase_has_spanish_coverage():
+    allowed = {
+        "B",
+        "BU SALIM",
+        "Perfumería Lamus",
+        "XXXX-XXXX-XXXX-XXXX",
+    }
+    missing = set()
+    for path in Path("templates").glob("*.html"):
+        source = path.read_text(encoding="utf-8")
+        for raw in re.findall(r">([^<>]+)<", source):
+            if "{%" in raw or "{{" in raw or "{#" in raw:
+                continue
+            phrase = html.unescape(re.sub(r"\s+", " ", raw).strip())
+            if (
+                phrase
+                and re.search(r"[A-Za-z]", phrase)
+                and phrase not in allowed
+                and i18n.translate_text(phrase, "es_CO") == phrase
+            ):
+                missing.add(f"{path.name}: {phrase}")
+        for raw in re.findall(r'(?:placeholder|aria-label|title)="([^"{]+)"', source):
+            phrase = html.unescape(raw.strip())
+            if (
+                re.search(r"[A-Za-z]", phrase)
+                and phrase not in allowed
+                and i18n.translate_text(phrase, "es_CO") == phrase
+            ):
+                missing.add(f"{path.name}: {phrase}")
+    assert not missing
 
 
 def test_english_can_be_selected_globally():
@@ -95,15 +130,15 @@ def test_all_primary_spanish_pages_have_no_known_english_ui_labels():
     ]
     customers = db.get_customers_overview()
     vendors = db.get_vendors_overview()
-    if customers:
-        customer_id = customers[0]["id"]
+    for customer in customers:
+        customer_id = customer["id"]
         urls.extend([
             f"/customers/{customer_id}",
             f"/customers/{customer_id}/edit",
             f"/customers/{customer_id}/report",
         ])
-    if vendors:
-        vendor_id = vendors[0]["id"]
+    for vendor in vendors:
+        vendor_id = vendor["id"]
         urls.extend([
             f"/vendors/{vendor_id}",
             f"/vendors/{vendor_id}/edit",
