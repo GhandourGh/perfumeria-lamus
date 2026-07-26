@@ -7,12 +7,15 @@ import zipfile
 from datetime import datetime
 from pathlib import Path
 
+from cryptography.fernet import Fernet, InvalidToken
+
 import database as db
 
 
 APP_VERSION = 1
 BACKUP_DIR = Path.home() / "Documents" / "Perfumeria Lamus Backups"
 STATE_PATH = Path(__file__).resolve().parent / "instance" / "backup_state.json"
+KEY_PATH = Path(__file__).resolve().parent / "instance" / "backup_encryption.key"
 REQUIRED_TABLES = {"users", "customers", "ledger", "vendors", "vendor_ledger", "bank_accounts", "bank_balance_log", "audit_log"}
 
 
@@ -53,9 +56,11 @@ def create_backup(folder=None):
                 "audit history",
             ],
         }
-        with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        payload = io.BytesIO()
+        with zipfile.ZipFile(payload, "w", compression=zipfile.ZIP_DEFLATED) as archive:
             archive.writestr("manifest.json", json.dumps(manifest, indent=2))
             archive.write(snapshot, "lamus-data.db")
+        output.write_bytes(Fernet(get_backup_key().encode()).encrypt(payload.getvalue()))
         output.chmod(0o600)
     finally:
         snapshot.unlink(missing_ok=True)
@@ -98,13 +103,38 @@ def status():
     return state
 
 
-def _extract_database(upload):
+def get_backup_key():
+    KEY_PATH.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+    if not KEY_PATH.exists():
+        KEY_PATH.write_bytes(Fernet.generate_key())
+        KEY_PATH.chmod(0o600)
+    return KEY_PATH.read_text(encoding="utf-8").strip()
+
+
+def _extract_database(upload, supplied_key=""):
     raw = upload.read()
+    if len(raw) > 25 * 1024 * 1024:
+        raise ValueError("The backup file is too large.")
+    # Read legacy backups created before encryption was enabled, while all new
+    # backups are encrypted below.
+    decrypted = raw if raw.startswith(b"PK") else None
+    for key in dict.fromkeys((get_backup_key(), (supplied_key or "").strip())):
+        if not key:
+            continue
+        try:
+            decrypted = Fernet(key.encode()).decrypt(raw)
+            break
+        except (ValueError, InvalidToken):
+            continue
+    if decrypted is None:
+        raise ValueError("This backup needs the correct backup key.")
     try:
-        with zipfile.ZipFile(io.BytesIO(raw), "r") as archive:
+        with zipfile.ZipFile(io.BytesIO(decrypted), "r") as archive:
             names = set(archive.namelist())
             if not {"manifest.json", "lamus-data.db"} <= names:
                 raise ValueError("This is not a complete Lamus backup.")
+            if archive.getinfo("lamus-data.db").file_size > 100 * 1024 * 1024:
+                raise ValueError("The backup expands beyond the safe size limit.")
             manifest = json.loads(archive.read("manifest.json"))
             if manifest.get("format") != "perfumeria-lamus-backup":
                 raise ValueError("This backup belongs to a different application.")
@@ -113,10 +143,10 @@ def _extract_database(upload):
         raise ValueError("The selected file is not a valid Lamus backup.")
 
 
-def restore_backup(upload):
+def restore_backup(upload, backup_key=""):
     if not upload or not upload.filename:
         raise ValueError("Choose a Lamus backup file first.")
-    restored_bytes = _extract_database(upload)
+    restored_bytes = _extract_database(upload, backup_key)
     fd, candidate_name = tempfile.mkstemp(suffix=".db")
     os.close(fd)
     candidate = Path(candidate_name)

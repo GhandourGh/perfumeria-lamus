@@ -1,13 +1,17 @@
 import os
 import secrets
-from datetime import datetime
+import time
+from datetime import datetime, timedelta
 from functools import wraps
 from pathlib import Path
+from urllib.parse import urlsplit
 
-from flask import Flask, flash, redirect, render_template, request, send_file, session, url_for
+from flask import Flask, abort, flash, redirect, render_template, request, send_file, session, url_for
+from werkzeug.security import check_password_hash
 
 import backup_manager
 import database as db
+import security_manager
 
 
 app = Flask(__name__)
@@ -30,7 +34,68 @@ def load_secret_key():
 
 
 app.secret_key = load_secret_key()
+app.config.update(
+    MAX_CONTENT_LENGTH=25 * 1024 * 1024,
+    PERMANENT_SESSION_LIFETIME=timedelta(minutes=30),
+    SESSION_COOKIE_NAME="lamus_session",
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Strict",
+)
 db.init_db()
+security_manager.init_security()
+_login_attempts = {}
+
+
+def csrf_token():
+    if "csrf_token" not in session:
+        session["csrf_token"] = secrets.token_urlsafe(32)
+    return session["csrf_token"]
+
+
+app.jinja_env.globals["csrf_token"] = csrf_token
+
+
+@app.before_request
+def security_checks():
+    if request.method == "POST":
+        supplied = request.form.get("_csrf_token") or request.headers.get("X-CSRF-Token")
+        if not supplied or not secrets.compare_digest(supplied, session.get("csrf_token", "")):
+            abort(400, "Security check failed. Refresh the page and try again.")
+    if session.get("user_id"):
+        now = int(time.time())
+        last_seen = session.get("last_seen", now)
+        if now - last_seen > 30 * 60:
+            session.clear()
+            flash("You were signed out after 30 minutes of inactivity.", "error")
+            return redirect(url_for("login"))
+        session["last_seen"] = now
+
+
+@app.after_request
+def security_headers(response):
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "same-origin"
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; img-src 'self' data:; style-src 'self'; "
+        "script-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+    )
+    if session.get("user_id"):
+        response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@app.errorhandler(413)
+def upload_too_large(_error):
+    flash("That file is too large. Choose a Lamus backup under 25 MB.", "error")
+    return redirect(url_for("backups"))
+
+
+def safe_next_url(value):
+    if not value:
+        return None
+    target = urlsplit(value)
+    return value if not target.scheme and not target.netloc and value.startswith("/") else None
 
 
 def format_cop(amount):
@@ -82,7 +147,7 @@ VENDOR_ENDPOINTS = {
     "vendor_overview", "vendors", "vendor_detail", "add_vendor", "edit_vendor",
     "vendor_report", "add_purchase", "add_vendor_payment",
 }
-OFFICE_ENDPOINTS = {"bank", "reports", "backups"}
+OFFICE_ENDPOINTS = {"bank", "reports", "backups", "security"}
 
 
 def resolve_workspace(endpoint):
@@ -114,12 +179,25 @@ def login_required(view):
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        user = db.authenticate_user(request.form.get("username", ""), request.form.get("password", ""))
+        username = request.form.get("username", "").strip()
+        key = f"{request.remote_addr}:{username.casefold()}"
+        now = time.time()
+        attempts = [stamp for stamp in _login_attempts.get(key, []) if now - stamp < 15 * 60]
+        if len(attempts) >= 5:
+            flash("Too many attempts. Wait 15 minutes, then try again.", "error")
+            return render_template("login.html"), 429
+        user = db.authenticate_user(username, request.form.get("password", ""))
         if user:
+            _login_attempts.pop(key, None)
             session.clear()
+            session.permanent = True
             session["user_id"] = user["id"]
             session["username"] = user["username"]
-            return redirect(request.args.get("next") or url_for("dashboard"))
+            session["last_seen"] = int(now)
+            csrf_token()
+            return redirect(safe_next_url(request.args.get("next")) or url_for("dashboard"))
+        attempts.append(now)
+        _login_attempts[key] = attempts
         flash("Invalid username or password.", "error")
     return render_template("login.html")
 
@@ -132,39 +210,70 @@ def logout():
 
 @app.route("/forgot-password", methods=["GET", "POST"])
 def forgot_password():
-    user = None
-    username = request.form.get("username") or request.args.get("username")
-    if username:
-        user = db.get_user_by_username(username)
-    if request.method == "POST" and request.form.get("step") == "answer":
-        user = db.get_user_by_username(request.form.get("username", ""))
-        if user and db.verify_security_answer(user["id"], request.form.get("security_answer", "")):
+    if request.method == "POST":
+        user = security_manager.use_recovery_code(
+            request.form.get("username", ""),
+            request.form.get("recovery_code", ""),
+        )
+        if user:
             session["pw_reset_allowed_for"] = user["id"]
+            session["pw_reset_expires"] = int(time.time()) + 10 * 60
             return redirect(url_for("reset_password"))
-        flash("That answer did not match.", "error")
-    elif request.method == "POST" and not user:
-        flash("No active account found for that username.", "error")
-    return render_template("forgot_password.html", user=user, username=username)
+        flash("The username or recovery code is not valid.", "error")
+    return render_template("forgot_password.html")
 
 
 @app.route("/reset-password", methods=["GET", "POST"])
 def reset_password():
     user_id = session.get("pw_reset_allowed_for")
-    if not user_id:
+    if not user_id or session.get("pw_reset_expires", 0) < int(time.time()):
+        session.pop("pw_reset_allowed_for", None)
+        session.pop("pw_reset_expires", None)
         return redirect(url_for("forgot_password"))
     if request.method == "POST":
         password = request.form.get("password", "")
         confirm = request.form.get("confirm_password", "")
-        if len(password) < 6:
-            flash("Password must be at least 6 characters.", "error")
+        if len(password) < 12:
+            flash("Password must be at least 12 characters.", "error")
         elif password != confirm:
             flash("Passwords do not match.", "error")
         else:
             db.change_password(user_id, password)
             session.pop("pw_reset_allowed_for", None)
+            session.pop("pw_reset_expires", None)
             flash("Password updated. Please log in.", "success")
             return redirect(url_for("login"))
     return render_template("reset_password.html")
+
+
+@app.route("/security", methods=["GET", "POST"])
+@login_required
+def security():
+    user = db.get_user(current_user_id())
+    recovery_code = None
+    if request.method == "POST":
+        action = request.form.get("action")
+        current_password = request.form.get("current_password", "")
+        if not check_password_hash(user["password_hash"], current_password):
+            flash("Your current password is incorrect.", "error")
+        elif action == "password":
+            new_password = request.form.get("new_password", "")
+            if len(new_password) < 12:
+                flash("New password must be at least 12 characters.", "error")
+            elif new_password != request.form.get("confirm_password", ""):
+                flash("New passwords do not match.", "error")
+            else:
+                db.change_password(user["id"], new_password)
+                flash("Password changed successfully.", "success")
+        elif action == "recovery":
+            recovery_code = security_manager.create_recovery_code(user["id"])
+            flash("New recovery code created. Save it now; it will not be shown again.", "success")
+    return render_template(
+        "security.html",
+        has_recovery_code=security_manager.has_recovery_code(user["id"]),
+        recovery_code=recovery_code,
+        backup_key=backup_manager.get_backup_key(),
+    )
 
 
 @app.route("/")
@@ -479,7 +588,10 @@ def backups():
             if action == "restore":
                 if request.form.get("confirmation") != "RESTORE":
                     raise ValueError("Type RESTORE exactly to confirm.")
-                backup_manager.restore_backup(request.files.get("backup_file"))
+                backup_manager.restore_backup(
+                    request.files.get("backup_file"),
+                    request.form.get("backup_key", ""),
+                )
                 session.clear()
                 flash("Backup restored. Please sign in again.", "success")
                 return redirect(url_for("login"))
@@ -533,4 +645,8 @@ def _record_opening_balance(kind, person_id):
 
 
 if __name__ == "__main__":
-    app.run(debug=os.environ.get("FLASK_DEBUG") == "1", host="127.0.0.1", port=5001)
+    if os.environ.get("FLASK_DEBUG") == "1":
+        app.run(debug=True, host="127.0.0.1", port=5001)
+    else:
+        from waitress import serve
+        serve(app, host="127.0.0.1", port=5001, threads=4)

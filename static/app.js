@@ -17,6 +17,19 @@
 
   if (window.lucide) lucide.createIcons();
 
+  var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+  if (csrfMeta) {
+    document.querySelectorAll('form[method="post"], form[method="POST"]').forEach(function (form) {
+      if (!form.querySelector('input[name="_csrf_token"]')) {
+        var token = document.createElement("input");
+        token.type = "hidden";
+        token.name = "_csrf_token";
+        token.value = csrfMeta.content;
+        form.appendChild(token);
+      }
+    });
+  }
+
   var backLink = document.querySelector("[data-back-link]");
   if (backLink) {
     backLink.addEventListener("click", function (event) {
