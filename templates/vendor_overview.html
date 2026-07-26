@@ -16,21 +16,16 @@
   </div>
 </header>
 
-<section class="grid grid-stats" aria-label="Key figures">
+<section class="grid grid-3" aria-label="Key figures">
   <div class="stat">
-    <div class="stat-label">Payable now</div>
+    <div class="stat-label">Amount owed</div>
     <div class="stat-value {% if stats.total_payable > 0 %}is-due{% endif %}">{{ stats.total_payable|cop }}</div>
     <div class="stat-note">{{ stats.vendors_with_balance }} of {{ stats.vendor_count }} vendor{{ 's' if stats.vendor_count != 1 }} owed</div>
   </div>
   <div class="stat">
-    <div class="stat-label">Purchased to date</div>
-    <div class="stat-value">{{ stats.total_purchased|cop }}</div>
-    <div class="stat-note">Lifetime stock purchases</div>
-  </div>
-  <div class="stat">
-    <div class="stat-label">Paid to vendors</div>
+    <div class="stat-label">Amount paid</div>
     <div class="stat-value {% if stats.total_paid > 0 %}is-good{% endif %}">{{ stats.total_paid|cop }}</div>
-    <div class="stat-note">Lifetime payments sent</div>
+    <div class="stat-note">Total payments sent to vendors</div>
   </div>
   <div class="stat stat-accent">
     <div class="stat-label">Bank balance</div>
