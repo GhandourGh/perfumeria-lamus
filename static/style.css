@@ -1854,7 +1854,6 @@ dialog.sheet[open] { animation: sheet-in .22s ease both; }
 .nav-menu-panel a.active {
   color: var(--gold-deep);
   background: var(--gold-wash);
-  box-shadow: inset 3px 0 0 var(--gold);
 }
 .nav-menu-panel a.active > svg { color: var(--gold-deep); }
 .nav-menu-panel a > svg,
