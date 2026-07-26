@@ -29,8 +29,8 @@
     <form method="post" class="stack">
       <input type="hidden" name="action" value="password">
       <label class="field"><span>Current password</span><input type="password" name="current_password" autocomplete="current-password" required></label>
-      <label class="field"><span>New password</span><input type="password" name="new_password" minlength="12" autocomplete="new-password" required><small>At least 12 characters.</small></label>
-      <label class="field"><span>Confirm new password</span><input type="password" name="confirm_password" minlength="12" autocomplete="new-password" required></label>
+      <label class="field"><span>New password</span><input type="password" name="new_password" minlength="8" autocomplete="new-password" required><small>Use 8 or more characters.</small></label>
+      <label class="field"><span>Confirm new password</span><input type="password" name="confirm_password" minlength="8" autocomplete="new-password" required></label>
       <button class="btn btn-dark" type="submit">Change password</button>
     </form>
   </section>
@@ -49,12 +49,4 @@
   </section>
 </div>
 
-<section class="panel backup-key-panel">
-  <div>
-    <p class="eyebrow">ENCRYPTED BACKUPS</p>
-    <h2>Backup key</h2>
-    <p class="muted">Save this separately. It is needed only when restoring a backup on a different computer.</p>
-  </div>
-  <output class="recovery-code backup-key">{{ backup_key }}</output>
-</section>
 {% endblock %}

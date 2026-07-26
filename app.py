@@ -233,8 +233,8 @@ def reset_password():
     if request.method == "POST":
         password = request.form.get("password", "")
         confirm = request.form.get("confirm_password", "")
-        if len(password) < 12:
-            flash("Password must be at least 12 characters.", "error")
+        if len(password) < 8:
+            flash("Password must be at least 8 characters.", "error")
         elif password != confirm:
             flash("Passwords do not match.", "error")
         else:
@@ -258,8 +258,8 @@ def security():
             flash("Your current password is incorrect.", "error")
         elif action == "password":
             new_password = request.form.get("new_password", "")
-            if len(new_password) < 12:
-                flash("New password must be at least 12 characters.", "error")
+            if len(new_password) < 8:
+                flash("New password must be at least 8 characters.", "error")
             elif new_password != request.form.get("confirm_password", ""):
                 flash("New passwords do not match.", "error")
             else:
@@ -272,7 +272,6 @@ def security():
         "security.html",
         has_recovery_code=security_manager.has_recovery_code(user["id"]),
         recovery_code=recovery_code,
-        backup_key=backup_manager.get_backup_key(),
     )
 
 
@@ -588,10 +587,7 @@ def backups():
             if action == "restore":
                 if request.form.get("confirmation") != "RESTORE":
                     raise ValueError("Type RESTORE exactly to confirm.")
-                backup_manager.restore_backup(
-                    request.files.get("backup_file"),
-                    request.form.get("backup_key", ""),
-                )
+                backup_manager.restore_backup(request.files.get("backup_file"))
                 session.clear()
                 flash("Backup restored. Please sign in again.", "success")
                 return redirect(url_for("login"))

@@ -111,23 +111,21 @@ def get_backup_key():
     return KEY_PATH.read_text(encoding="utf-8").strip()
 
 
-def _extract_database(upload, supplied_key=""):
+def _extract_database(upload):
     raw = upload.read()
     if len(raw) > 25 * 1024 * 1024:
         raise ValueError("The backup file is too large.")
     # Read legacy backups created before encryption was enabled, while all new
     # backups are encrypted below.
     decrypted = raw if raw.startswith(b"PK") else None
-    for key in dict.fromkeys((get_backup_key(), (supplied_key or "").strip())):
-        if not key:
-            continue
+    for key in (get_backup_key(),):
         try:
             decrypted = Fernet(key.encode()).decrypt(raw)
             break
         except (ValueError, InvalidToken):
             continue
     if decrypted is None:
-        raise ValueError("This backup needs the correct backup key.")
+        raise ValueError("This encrypted backup was created on a different computer.")
     try:
         with zipfile.ZipFile(io.BytesIO(decrypted), "r") as archive:
             names = set(archive.namelist())
@@ -143,10 +141,10 @@ def _extract_database(upload, supplied_key=""):
         raise ValueError("The selected file is not a valid Lamus backup.")
 
 
-def restore_backup(upload, backup_key=""):
+def restore_backup(upload):
     if not upload or not upload.filename:
         raise ValueError("Choose a Lamus backup file first.")
-    restored_bytes = _extract_database(upload, backup_key)
+    restored_bytes = _extract_database(upload)
     fd, candidate_name = tempfile.mkstemp(suffix=".db")
     os.close(fd)
     candidate = Path(candidate_name)

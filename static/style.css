@@ -1665,16 +1665,9 @@ dialog.sheet[open] { animation: sheet-in .22s ease both; }
   font-size: 20px; font-weight: 800; white-space: nowrap;
 }
 .auth-help { color: var(--muted); font-size: 13px; line-height: 1.5; }
-.backup-key-panel {
-  display: flex; justify-content: space-between; align-items: center;
-  gap: var(--space-5); margin-top: var(--space-5); padding: var(--space-5);
-}
-.backup-key-panel h2 { margin: 3px 0 5px; }
-.backup-key { color: var(--ink); background: var(--gold-wash); }
 @media (max-width: 720px) {
   .recovery-code-panel { align-items: stretch; flex-direction: column; }
   .recovery-code { text-align: center; white-space: normal; overflow-wrap: anywhere; }
-  .backup-key-panel { align-items: stretch; flex-direction: column; }
 }
 .backup-alert svg { flex: 0 0 auto; }
 .field small { color: var(--muted); }
@@ -1699,7 +1692,7 @@ dialog.sheet[open] { animation: sheet-in .22s ease both; }
   margin-top: var(--space-4);
 }
 .restore-fields {
-  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-4);
 }
 .restore-actions {
