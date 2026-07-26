@@ -1824,6 +1824,12 @@ dialog.sheet[open] { animation: sheet-in .22s ease both; }
   grid-template-columns: repeat(2, minmax(0, 1fr));
   width: 440px;
 }
+.nav-more .nav-menu-panel {
+  right: 0;
+  left: auto;
+  grid-template-columns: minmax(0, 1fr);
+  width: 240px;
+}
 .nav-menu-panel a,
 .nav-menu-panel button {
   display: flex;
