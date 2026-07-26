@@ -15,7 +15,7 @@ ES = {
     "Overview": "Resumen", "All customers": "Todos los clientes", "New customer": "Nuevo cliente",
     "All vendors": "Todos los proveedores", "New vendor": "Nuevo proveedor", "More": "Más",
     "Bank": "Banco", "Reports": "Informes", "Backup & restore": "Copia y restauración",
-    "Security": "Seguridad", "Account settings": "Configuración de la cuenta",
+    "Security": "Seguridad", "Account settings": "Configuración de la cuenta", "Backup": "Copia",
     "Sign out": "Cerrar sesión", "Back": "Volver", "Dismiss notification": "Cerrar notificación",
     "End of page": "Fin de la página", "Back to top": "Volver arriba", "Maison Ledger": "Libro de cuentas",
     "Perfumería Lamus · Maison Ledger": "Perfumería Lamus · Libro de cuentas",

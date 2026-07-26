@@ -1914,20 +1914,20 @@ dialog.sheet[open] { animation: sheet-in .22s ease both; }
 }
 .nav-menu-panel span { display: block; min-width: 0; white-space: nowrap; }
 .nav-menu-panel strong { font-size: 14px; }
-.nav-more { margin-left: auto; }
-.nav-quick-backup { margin: 0; }
+.nav-more { margin-left: 0; }
+.nav-quick-backup { margin: 0 0 0 auto; }
 .nav-quick-backup button {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  min-height: 42px;
-  padding: 8px 13px;
+  min-height: 34px;
+  padding: 6px 9px;
   color: var(--gold-bright);
   background: transparent;
   border: 1px solid var(--gold-deep);
   border-radius: var(--radius);
   font: inherit;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 750;
   white-space: nowrap;
   cursor: pointer;
@@ -1949,8 +1949,8 @@ dialog.sheet[open] { animation: sheet-in .22s ease both; }
 .nav-quick-backup button.is-error { border-color: var(--garnet); }
 .nav-quick-backup button.is-success { border-color: var(--laurel); }
 .nav-quick-backup svg {
-  width: 17px;
-  height: 17px;
+  width: 15px;
+  height: 15px;
   flex: 0 0 auto;
 }
 .nav-account { margin-left: 0; }
@@ -2065,6 +2065,7 @@ dialog.sheet[open] { animation: sheet-in .22s ease both; }
   body.nav-open .nav-more { margin-left: 0; }
   body.nav-open .nav-quick-backup,
   body.nav-open .nav-quick-backup button { width: 100%; }
+  body.nav-open .nav-quick-backup { margin-left: 0; }
   body.nav-open .nav-quick-backup button { justify-content: flex-start; }
   body.nav-open .nav-menu-panel,
   body.nav-open .nav-menu-panel-wide {

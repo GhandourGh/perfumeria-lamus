@@ -78,6 +78,13 @@ def test_navbar_has_one_click_backup_download():
     assert form is not None
     assert form.get("method") == "post"
     assert form.select_one('button[aria-label="Descargar copia"]') is not None
+    assert form.select_one("button span").get_text(strip=True) == "Copia"
+    nav = soup.select_one("#topnav-menu")
+    children = [child for child in nav.children if getattr(child, "name", None)]
+    backup_index = children.index(form)
+    more_index = next(index for index, child in enumerate(children) if "nav-more" in child.get("class", []))
+    account_index = next(index for index, child in enumerate(children) if "nav-account" in child.get("class", []))
+    assert backup_index < more_index < account_index
 
 
 def test_all_primary_spanish_pages_have_no_known_english_ui_labels():
