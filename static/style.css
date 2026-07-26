@@ -1601,3 +1601,42 @@ dialog.sheet[open] { animation: sheet-in .22s ease both; }
   .grid-stats { grid-template-columns: 1fr; }
   .main { padding: var(--space-4) var(--space-4) var(--space-7); }
 }
+
+/* Backup & recovery */
+.backup-status { margin-bottom: var(--space-5); }
+.stat-value-small { font-size: clamp(28px, 3vw, 42px); }
+.backup-grid { align-items: start; }
+.backup-grid .panel, .restore-panel { padding: var(--space-5); }
+.backup-alert {
+  display: flex; gap: var(--space-3); align-items: flex-start;
+  padding: var(--space-4); margin-bottom: var(--space-5);
+  color: var(--danger); background: var(--danger-soft);
+  border: 1px solid var(--danger-line); border-radius: var(--radius-md);
+}
+.backup-alert svg, .privacy-note svg { flex: 0 0 auto; }
+.check-row {
+  display: flex; align-items: flex-start; gap: var(--space-3);
+  padding: var(--space-4); border: 1px solid var(--line); border-radius: var(--radius-md);
+  cursor: pointer;
+}
+.check-row input { margin-top: 4px; }
+.check-row span { display: grid; gap: 3px; }
+.check-row small, .field small { color: var(--muted); }
+.backup-test-form { margin-top: var(--space-3); }
+.backup-test-form .btn { width: 100%; }
+.recovery-key {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  overflow-wrap: anywhere; resize: none;
+}
+.privacy-note {
+  display: flex; gap: var(--space-2); align-items: center;
+  color: var(--success); font-weight: 700;
+}
+.restore-panel { margin-top: var(--space-5); }
+.restore-form {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  gap: var(--space-4); align-items: end; margin-top: var(--space-4);
+}
+@media (max-width: 900px) {
+  .restore-form { grid-template-columns: 1fr; }
+}

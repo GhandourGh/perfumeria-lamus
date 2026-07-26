@@ -62,6 +62,9 @@
       <a class="nav-link nav-link-office {% if request.endpoint == 'reports' %}active{% endif %}" href="{{ url_for('reports') }}">
         <i data-lucide="printer"></i>Reports
       </a>
+      <a class="nav-link nav-link-office {% if request.endpoint == 'backups' %}active{% endif %}" href="{{ url_for('backups') }}">
+        <i data-lucide="shield-check"></i>Backup
+      </a>
     </nav>
     {% if current_user %}
     <div class="topnav-user">

@@ -6,6 +6,7 @@ from pathlib import Path
 
 from flask import Flask, flash, redirect, render_template, request, session, url_for
 
+import backup_manager
 import database as db
 
 
@@ -81,7 +82,7 @@ VENDOR_ENDPOINTS = {
     "vendor_overview", "vendors", "vendor_detail", "add_vendor", "edit_vendor",
     "vendor_report", "add_purchase", "add_vendor_payment",
 }
-OFFICE_ENDPOINTS = {"bank", "reports"}
+OFFICE_ENDPOINTS = {"bank", "reports", "backups"}
 
 
 def resolve_workspace(endpoint):
@@ -469,6 +470,42 @@ def bank():
     return render_template("bank.html", balance=db.get_current_bank_balance(), history=db.get_bank_balance_history())
 
 
+@app.route("/backups", methods=["GET", "POST"])
+@login_required
+def backups():
+    if request.method == "POST":
+        action = request.form.get("action")
+        try:
+            if action == "save":
+                backup_manager.save_settings(
+                    request.form.get("sender_email", ""),
+                    request.form.get("recipient_email", ""),
+                    request.form.get("enabled") == "1",
+                    request.form.get("app_password") or None,
+                )
+                flash("Backup settings saved privately on this computer.", "success")
+            elif action == "backup":
+                backup_manager.create_backup(send_email=False)
+                flash("Encrypted backup created and verified.", "success")
+            elif action == "test":
+                backup_manager.test_email()
+                flash("Test backup emailed successfully.", "success")
+            elif action == "restore":
+                if request.form.get("confirmation") != "RESTORE":
+                    raise ValueError("Type RESTORE exactly to confirm.")
+                backup_manager.restore_backup(
+                    request.files.get("backup_file"),
+                    request.form.get("recovery_key", ""),
+                )
+                session.clear()
+                flash("Backup restored. Please sign in again.", "success")
+                return redirect(url_for("login"))
+        except Exception as exc:
+            flash(str(exc), "error")
+        return redirect(url_for("backups"))
+    return render_template("backups.html", backup=backup_manager.backup_status())
+
+
 def person_form(customer=False):
     return {
         "name": request.form.get("name", "").strip(),
@@ -506,4 +543,5 @@ def _record_opening_balance(kind, person_id):
 
 
 if __name__ == "__main__":
+    backup_manager.start_scheduler(app)
     app.run(debug=os.environ.get("FLASK_DEBUG") == "1", host="127.0.0.1", port=5001)
