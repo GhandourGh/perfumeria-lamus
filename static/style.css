@@ -749,10 +749,6 @@ body[data-section="vendor"] .identity-seal {
 .customer-card-actions .btn { min-width: 0; }
 .customer-card-actions .btn:only-child { grid-column: 1 / -1; }
 
-.customer-card-grid-registry {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
 .customer-card-detailed { min-height: 342px; }
 
 .customer-card-note {
@@ -795,21 +791,13 @@ body[data-section="vendor"] .identity-seal {
 }
 
 .customer-card-actions-detailed {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .customer-card-actions-detailed .btn:only-child { grid-column: 1 / -1; }
 
 @media (max-width: 1180px) {
   .customer-card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-
-@media (max-width: 1100px) {
-  .customer-card-actions-detailed { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-
-@media (max-width: 860px) {
-  .customer-card-grid-registry { grid-template-columns: minmax(0, 1fr); }
 }
 
 @media (max-width: 640px) {
