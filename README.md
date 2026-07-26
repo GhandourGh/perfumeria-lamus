@@ -29,6 +29,11 @@ directory. They contain business data or private authentication material.
 
 ## Install on a new MacBook
 
+Each Mac keeps its own private database. GitHub contains the application code,
+not customers, vendors, transactions, passwords, backups, or other store data.
+Cloning the repository normally therefore starts with an empty store. Later
+`git pull` updates the application without replacing that Mac's records.
+
 Install Apple's command-line tools and clone the app:
 
 ```bash
@@ -50,11 +55,14 @@ export INITIAL_ADMIN_PASSWORD='choose-a-private-password'
 
 Open `http://127.0.0.1:5001`. Keep the Terminal window open while using Lamus.
 
-To move the current store records instead of starting empty, close Lamus on
-both computers and copy `perfumeria_lamus.db` from the old app folder into the
-same folder on the new MacBook. Also copy the ignored `instance` folder if old
-`.lamusbackup` files must remain restorable on the new computer. Never upload
-either item to GitHub.
+For a clean installation, do not copy `perfumeria_lamus.db`, the `instance`
+folder, or any `.lamusbackup` file from another computer. To update the app
+later, open Terminal in this folder and run `git pull`; the local database
+remains untouched.
+
+If store records ever need to be deliberately moved to another computer, use
+the app's manual backup and restore controls. That is a separate action and is
+never performed by Git.
 
 ## Sections
 
