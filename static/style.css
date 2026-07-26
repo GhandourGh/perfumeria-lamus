@@ -1927,25 +1927,57 @@ dialog.sheet[open] { animation: sheet-in .22s ease both; }
   border-radius: var(--radius-pill);
   font-weight: 800;
 }
-.nav-account-panel { right: 0; left: auto; }
+.nav-account-panel {
+  right: 0;
+  left: auto;
+  width: min(280px, calc(100vw - 24px));
+  padding: 7px;
+  overflow: hidden;
+}
+.nav-account-panel > a,
+.nav-account-panel > form > button {
+  min-height: 44px;
+  padding: 10px 11px;
+}
+.nav-account-panel > a strong,
+.nav-account-panel > form > button strong {
+  font-size: 13px;
+}
 .language-menu {
-  margin: 6px 4px;
-  padding: 8px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px;
+  margin: 4px;
+  padding: 8px 7px;
   border-block: 1px solid var(--hairline);
 }
 .language-menu > span {
-  padding: 4px 8px 7px;
+  grid-column: 1 / -1;
+  padding: 0 4px 4px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: .12em;
   text-transform: uppercase;
 }
 .language-menu form { margin: 0; }
+.language-menu button {
+  min-height: 36px;
+  justify-content: center;
+  padding: 7px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
 .language-menu button.active {
   color: var(--gold-deep);
   background: var(--gold-wash);
   font-weight: 800;
+}
+.language-menu button:focus-visible {
+  outline: 2px solid var(--gold-deep);
+  outline-offset: -2px;
 }
 .auth-language {
   position: fixed;
