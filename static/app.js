@@ -57,6 +57,21 @@
     if (toggle) toggle.setAttribute("aria-expanded", "false");
   }
 
+  var navMenus = Array.prototype.slice.call(document.querySelectorAll("[data-nav-menu]"));
+  function closeNavMenus(except) {
+    navMenus.forEach(function (menu) {
+      if (menu !== except) menu.removeAttribute("open");
+    });
+  }
+  navMenus.forEach(function (menu) {
+    menu.addEventListener("toggle", function () {
+      if (menu.open) closeNavMenus(menu);
+    });
+  });
+  document.addEventListener("click", function (event) {
+    if (!event.target.closest("[data-nav-menu]")) closeNavMenus();
+  });
+
   if (toggle) {
     toggle.addEventListener("click", function () {
       var open = document.body.classList.toggle("nav-open");
@@ -65,7 +80,11 @@
   }
   if (scrim) scrim.addEventListener("click", closeNav);
   document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") closeNav();
+    if (e.key === "Escape") {
+      closeNavMenus();
+      closeNav();
+      if (toggle) toggle.focus();
+    }
   });
 
   /* ---------- Toasts ---------- */

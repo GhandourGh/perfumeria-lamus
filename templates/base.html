@@ -24,68 +24,56 @@
       <i data-lucide="menu"></i>
     </button>
     <nav class="topnav-links" id="topnav-menu" aria-label="Primary">
-      {# Workspace switcher — flip the whole app between the Customers (receivables)
-         and Vendors (payables) books. Each lands on its own overview. #}
-      <div class="ws-switch" role="group" aria-label="Choose workspace">
-        <a class="ws-tab ws-tab-customer {% if workspace == 'customers' and not nav_office %}active{% endif %}" href="{{ url_for('dashboard') }}">
-          <i data-lucide="users"></i><span>Customers</span>
-        </a>
-        <a class="ws-tab ws-tab-vendor {% if workspace == 'vendors' and not nav_office %}active{% endif %}" href="{{ url_for('vendor_overview') }}">
-          <i data-lucide="package"></i><span>Vendors</span>
-        </a>
-      </div>
-
-      <span class="nav-sep" aria-hidden="true"></span>
-
-      {# Section links — only the active workspace's pages are shown. #}
-      {% if workspace == 'vendors' %}
-        <a class="nav-link {% if request.endpoint == 'vendor_overview' %}active{% endif %}" data-section-link="vendor" href="{{ url_for('vendor_overview') }}">
-          <i data-lucide="layout-dashboard"></i>Overview
-        </a>
-        <a class="nav-link {% if request.endpoint in ('vendors', 'vendor_detail', 'add_vendor', 'edit_vendor') %}active{% endif %}" data-section-link="vendor" href="{{ url_for('vendors') }}">
-          <i data-lucide="package"></i>Vendors
-        </a>
-      {% else %}
-        <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" data-section-link="customer" href="{{ url_for('dashboard') }}">
-          <i data-lucide="layout-dashboard"></i>Overview
-        </a>
-        <a class="nav-link {% if request.endpoint and 'customer' in request.endpoint %}active{% endif %}" data-section-link="customer" href="{{ url_for('customers') }}">
-          <i data-lucide="users"></i>Customers
-        </a>
-      {% endif %}
-
-      <span class="nav-sep nav-sep-office" aria-hidden="true"></span>
-
-      {# Office — shared by both workspaces. #}
-      <a class="nav-link nav-link-office {% if request.endpoint == 'bank' %}active{% endif %}" href="{{ url_for('bank') }}">
-        <i data-lucide="landmark"></i>Bank
-      </a>
-      <a class="nav-link nav-link-office {% if request.endpoint == 'reports' %}active{% endif %}" href="{{ url_for('reports') }}">
-        <i data-lucide="printer"></i>Reports
-      </a>
-      <a class="nav-link nav-link-office {% if request.endpoint == 'security' %}active{% endif %}" href="{{ url_for('security') }}">
-        <i data-lucide="shield-check"></i>Security
-      </a>
-      <details class="nav-backup-menu">
-        <summary class="nav-link nav-link-office {% if request.endpoint in ('backups', 'download_backup') %}active{% endif %}">
-          <i data-lucide="database-backup"></i>Backup<i class="nav-chevron" data-lucide="chevron-down"></i>
+      <details class="nav-menu" data-nav-menu>
+        <summary class="nav-menu-trigger {% if workspace == 'customers' and not nav_office %}active{% endif %}">
+          <i data-lucide="users" aria-hidden="true"></i><span>Customers</span><i class="nav-chevron" data-lucide="chevron-down" aria-hidden="true"></i>
         </summary>
-        <div class="nav-backup-dropdown">
-          <form action="{{ url_for('download_backup') }}" method="post">
-            <button type="submit"><i data-lucide="download"></i><span><strong>Backup now</strong><small>Save a complete copy</small></span></button>
-          </form>
-          <a href="{{ url_for('backups') }}"><i data-lucide="rotate-ccw"></i><span><strong>Restore</strong><small>Use a saved backup</small></span></a>
+        <div class="nav-menu-panel">
+          <a href="{{ url_for('dashboard') }}"><i data-lucide="layout-dashboard" aria-hidden="true"></i><span><strong>Overview</strong></span></a>
+          <a href="{{ url_for('customers') }}"><i data-lucide="contact-round" aria-hidden="true"></i><span><strong>All customers</strong></span></a>
+          <a href="{{ url_for('add_customer') }}"><i data-lucide="user-plus" aria-hidden="true"></i><span><strong>New customer</strong></span></a>
         </div>
       </details>
+
+      <details class="nav-menu" data-nav-menu>
+        <summary class="nav-menu-trigger {% if workspace == 'vendors' and not nav_office %}active{% endif %}">
+          <i data-lucide="package" aria-hidden="true"></i><span>Vendors</span><i class="nav-chevron" data-lucide="chevron-down" aria-hidden="true"></i>
+        </summary>
+        <div class="nav-menu-panel">
+          <a href="{{ url_for('vendor_overview') }}"><i data-lucide="layout-dashboard" aria-hidden="true"></i><span><strong>Overview</strong></span></a>
+          <a href="{{ url_for('vendors') }}"><i data-lucide="boxes" aria-hidden="true"></i><span><strong>All vendors</strong></span></a>
+          <a href="{{ url_for('add_vendor') }}"><i data-lucide="package-plus" aria-hidden="true"></i><span><strong>New vendor</strong></span></a>
+        </div>
+      </details>
+
+      <details class="nav-menu" data-nav-menu>
+        <summary class="nav-menu-trigger {% if nav_office %}active{% endif %}">
+          <i data-lucide="menu" aria-hidden="true"></i><span>More</span><i class="nav-chevron" data-lucide="chevron-down" aria-hidden="true"></i>
+        </summary>
+        <div class="nav-menu-panel nav-menu-panel-wide">
+          <a href="{{ url_for('bank') }}"><i data-lucide="landmark" aria-hidden="true"></i><span><strong>Bank</strong></span></a>
+          <a href="{{ url_for('reports') }}"><i data-lucide="printer" aria-hidden="true"></i><span><strong>Reports</strong></span></a>
+          <a href="{{ url_for('backups') }}"><i data-lucide="database-backup" aria-hidden="true"></i><span><strong>Backup & restore</strong></span></a>
+          <a href="{{ url_for('security') }}"><i data-lucide="shield-check" aria-hidden="true"></i><span><strong>Security</strong></span></a>
+        </div>
+      </details>
+
+      {% if current_user %}
+      <details class="nav-menu nav-account" data-nav-menu>
+        <summary class="nav-account-trigger">
+          <span class="nav-avatar" aria-hidden="true">{{ current_user.full_name[:1]|upper }}</span>
+          <span>{{ current_user.full_name }}</span>
+          <i class="nav-chevron" data-lucide="chevron-down" aria-hidden="true"></i>
+        </summary>
+        <div class="nav-menu-panel nav-account-panel">
+          <a href="{{ url_for('security') }}"><i data-lucide="settings" aria-hidden="true"></i><span><strong>Account settings</strong></span></a>
+          <form action="{{ url_for('logout') }}" method="post">
+            <button type="submit"><i data-lucide="log-out" aria-hidden="true"></i><span><strong>Sign out</strong></span></button>
+          </form>
+        </div>
+      </details>
+      {% endif %}
     </nav>
-    {% if current_user %}
-    <div class="topnav-user">
-      <span class="topnav-user-name">{{ current_user.full_name }}</span>
-      <form action="{{ url_for('logout') }}" method="post">
-        <button class="logout-button" type="submit"><i data-lucide="log-out"></i>Sign out</button>
-      </form>
-    </div>
-    {% endif %}
   </header>
   <button class="scrim" type="button" data-nav-scrim tabindex="-1" aria-hidden="true"></button>
 
