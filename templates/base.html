@@ -78,7 +78,7 @@
   <button class="scrim" type="button" data-nav-scrim tabindex="-1" aria-hidden="true"></button>
 
   <main class="main" id="main">
-      {% if current_user %}
+      {% if current_user and request.endpoint not in ('dashboard', 'vendor_overview') %}
       <div class="page-back-row">
         <a class="page-back" href="{{ url_for('vendor_overview') if workspace == 'vendors' else url_for('dashboard') }}" data-back-link>
           <i data-lucide="arrow-left" aria-hidden="true"></i>
