@@ -71,6 +71,15 @@ def test_colombian_currency_and_dates():
     assert i18n.format_day("2026-07-26", "es_CO") == "26 jul 2026"
 
 
+def test_navbar_has_one_click_backup_download():
+    response = authenticated_client().get("/")
+    soup = BeautifulSoup(response.data, "html.parser")
+    form = soup.select_one('form.nav-quick-backup[action="/backups/download"]')
+    assert form is not None
+    assert form.get("method") == "post"
+    assert form.select_one('button[aria-label="Descargar copia"]') is not None
+
+
 def test_all_primary_spanish_pages_have_no_known_english_ui_labels():
     client = authenticated_client()
     urls = [

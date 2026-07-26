@@ -68,6 +68,12 @@
       </details>
 
       {% if current_user %}
+      <form class="nav-quick-backup" action="{{ url_for('download_backup') }}" method="post">
+        <button type="submit" title="Download backup" aria-label="Download backup">
+          <i data-lucide="download" aria-hidden="true"></i>
+          <span>Download backup</span>
+        </button>
+      </form>
       <details class="nav-menu nav-account" data-nav-menu>
         <summary class="nav-account-trigger">
           <span class="nav-avatar" aria-hidden="true">B</span>
