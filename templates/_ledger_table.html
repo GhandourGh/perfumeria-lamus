@@ -15,7 +15,6 @@
           <th scope="col">Status</th>
           <th scope="col" class="num">Amount</th>
           <th scope="col" class="num">Balance after</th>
-          {% if ledger_kind %}<th scope="col" class="no-print"><span class="sr-only">Actions</span></th>{% endif %}
         </tr>
       </thead>
       <tbody>
@@ -60,15 +59,6 @@
           <td data-th="Balance after" class="num">
             {% if row.is_voided %}<span class="muted">—</span>{% elif row.balance_after is not none %}<span class="amount">{{ row.balance_after|cop }}</span>{% else %}<span class="muted">—</span>{% endif %}
           </td>
-          {% if ledger_kind %}
-          <td data-th="" class="no-print">
-            {% if not row.is_voided %}
-              <button class="btn btn-sm btn-ghost" type="button"
-                      data-void="{{ url_for('void_customer_ledger', customer_id=ledger_owner_id, entry_id=row.id) if ledger_kind == 'customer' else url_for('void_vendor_ledger', vendor_id=ledger_owner_id, entry_id=row.id) }}"
-                      aria-label="Void this entry"><i data-lucide="ban"></i>Void</button>
-            {% endif %}
-          </td>
-          {% endif %}
         </tr>
         {% endfor %}
       </tbody>
@@ -78,27 +68,3 @@
     {{ ui.empty_state('No entries yet', 'This account has no movements. Record a credit sale or payment and it will appear here.') }}
   {% endif %}
 </section>
-
-{% if ledger_kind %}
-{# Shared void confirmation — its form action is set per-row by app.js. #}
-<dialog class="sheet" id="sheet-void" aria-labelledby="sheet-void-title">
-  <div class="sheet-head">
-    <i data-lucide="ban"></i>
-    <h2 id="sheet-void-title">Void this entry</h2>
-    <button class="sheet-close" type="button" data-close-sheet aria-label="Close"><i data-lucide="x"></i></button>
-  </div>
-  <form method="post" data-void-form data-guard>
-    <div class="sheet-body form-grid">
-      <p class="field-help">This reverses the entry out of the balance. It stays in the ledger, struck through, as a record. This can't be undone.</p>
-      <label class="field">
-        <span>Reason <em class="optional">optional</em></span>
-        <input name="reason" maxlength="120" placeholder="e.g. Entered the wrong amount">
-      </label>
-    </div>
-    <div class="sheet-foot">
-      <button class="btn" type="button" data-close-sheet>Cancel</button>
-      <button class="btn btn-danger" type="submit"><i data-lucide="ban"></i>Void entry</button>
-    </div>
-  </form>
-</dialog>
-{% endif %}

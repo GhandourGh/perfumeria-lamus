@@ -19,14 +19,14 @@
     </div>
   </div>
   <div class="page-actions">
-    <button class="btn btn-gold" type="button" data-open-sheet="sheet-vendor-payment" {% if balance <= 0 %}disabled title="Nothing is payable to this vendor"{% endif %}>
+    <button class="btn btn-success" type="button" data-open-sheet="sheet-vendor-payment" {% if balance <= 0 %}disabled title="Nothing is payable to this vendor"{% endif %}>
       <i data-lucide="hand-coins"></i>Record payment sent
     </button>
     <button class="btn btn-primary" type="button" data-open-sheet="sheet-purchase">
       <i data-lucide="package-plus"></i>Record stock purchase
     </button>
     <a class="btn" href="{{ url_for('vendor_report', vendor_id=vendor.id) }}"><i data-lucide="printer"></i>Statement</a>
-    <a class="btn btn-ghost" href="{{ url_for('edit_vendor', vendor_id=vendor.id) }}"><i data-lucide="pencil"></i>Edit</a>
+    <a class="btn" href="{{ url_for('edit_vendor', vendor_id=vendor.id) }}"><i data-lucide="pencil"></i>Edit</a>
   </div>
 </header>
 
@@ -50,16 +50,16 @@
   </div>
 </section>
 
+{% set ledger_kind = 'vendor' %}
+{% set ledger_owner_id = vendor.id %}
+{% include "_ledger_table.html" %}
+
 {% if vendor.notes %}
 <section class="panel" style="margin-top: var(--space-5)">
   <div class="panel-head"><h2>Notes</h2></div>
   <p class="muted">{{ vendor.notes }}</p>
 </section>
 {% endif %}
-
-{% set ledger_kind = 'vendor' %}
-{% set ledger_owner_id = vendor.id %}
-{% include "_ledger_table.html" %}
 
 {# ------- Record stock purchase ------- #}
 <dialog class="sheet" id="sheet-purchase" aria-labelledby="sheet-purchase-title">
@@ -143,7 +143,7 @@
     </div>
     <div class="sheet-foot">
       <button class="btn" type="button" data-close-sheet>Cancel</button>
-      <button class="btn btn-gold" type="submit"><i data-lucide="hand-coins"></i>Record payment</button>
+      <button class="btn btn-success" type="submit"><i data-lucide="hand-coins"></i>Record payment</button>
     </div>
   </form>
 </dialog>

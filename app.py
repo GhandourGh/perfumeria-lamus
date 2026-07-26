@@ -310,7 +310,11 @@ def archive_customer(customer_id):
 @app.route("/vendors/overview")
 @login_required
 def vendor_overview():
-    vendors = db.get_vendors_overview()
+    vendors = sorted(
+        db.get_vendors_overview(),
+        key=lambda vendor: vendor["balance"],
+        reverse=True,
+    )
     payable = [v for v in vendors if v["balance"] > 0]
     stats = {
         "total_payable": sum(v["balance"] for v in payable),
@@ -332,7 +336,12 @@ def vendor_overview():
 @app.route("/vendors")
 @login_required
 def vendors():
-    return render_template("vendors.html", vendors=db.get_vendors_overview())
+    vendor_list = sorted(
+        db.get_vendors_overview(),
+        key=lambda vendor: vendor["balance"],
+        reverse=True,
+    )
+    return render_template("vendors.html", vendors=vendor_list)
 
 
 @app.route("/vendors/add", methods=["GET", "POST"])

@@ -50,43 +50,51 @@
       <input type="search" data-registry-search placeholder="Search by name, phone, or note…" aria-label="Search vendors">
     </div>
   </div>
-  <div class="table-scroll">
-    <table class="table table-stack" data-registry>
-      <thead>
-        <tr>
-          <th scope="col">Vendor</th>
-          <th scope="col">Status</th>
-          <th scope="col" class="num">Payable</th>
-          <th scope="col"><span class="sr-only">Actions</span></th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for vendor in vendors %}
-        <tr data-row
-            data-search="{{ (vendor.name ~ ' ' ~ (vendor.phone or '') ~ ' ' ~ (vendor.notes or ''))|lower }}"
-            data-balance="{{ vendor.balance }}">
-          <td data-th="Vendor">
-            <a class="row-link" href="{{ url_for('vendor_detail', vendor_id=vendor.id) }}">
-              <span class="row-title">{{ vendor.name }}</span>
-            </a>
-            <div class="row-sub">{{ vendor.phone or 'No phone on file' }}</div>
-          </td>
-          <td data-th="Status">
-            {% if vendor.balance > 0 %}<span class="badge badge-due">Payable</span>{% else %}<span class="badge badge-settled">Settled</span>{% endif %}
-          </td>
-          <td data-th="Payable" class="num">
-            <span class="amount {% if vendor.balance > 0 %}amount-due{% else %}amount-muted{% endif %}">{{ vendor.balance|cop }}</span>
-          </td>
-          <td data-th="">
-            <div class="row-actions">
-              {% if vendor.balance > 0 %}<a class="btn btn-sm btn-gold" href="{{ url_for('vendor_detail', vendor_id=vendor.id, action='vpay') }}"><i data-lucide="hand-coins"></i>Pay</a>{% endif %}
-              <a class="btn btn-sm" href="{{ url_for('vendor_detail', vendor_id=vendor.id) }}"><i data-lucide="book-open"></i>Open account</a>
-            </div>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  <div class="customer-card-grid" data-registry aria-label="Vendor accounts">
+    {% for vendor in vendors %}
+    <article class="customer-card vendor-card"
+             data-row
+             data-search="{{ (vendor.name ~ ' ' ~ (vendor.phone or '') ~ ' ' ~ (vendor.notes or ''))|lower }}"
+             data-balance="{{ vendor.balance }}"
+             aria-labelledby="overview-vendor-{{ vendor.id }}-name">
+      <div class="customer-card-head">
+        <div class="customer-card-identity">
+          <a class="customer-card-name"
+             id="overview-vendor-{{ vendor.id }}-name"
+             href="{{ url_for('vendor_detail', vendor_id=vendor.id) }}">
+            {{ vendor.name }}
+          </a>
+          <span class="customer-card-phone">
+            <i data-lucide="phone" aria-hidden="true"></i>
+            {{ vendor.phone or 'No phone on file' }}
+          </span>
+        </div>
+        {% if vendor.balance > 0 %}<span class="badge badge-due">Payable</span>{% else %}<span class="badge badge-settled">Settled</span>{% endif %}
+      </div>
+
+      <div class="customer-card-balance">
+        <span>Payable</span>
+        <strong class="amount {% if vendor.balance > 0 %}amount-due{% else %}amount-muted{% endif %}">
+          {{ vendor.balance|cop }}
+        </strong>
+      </div>
+
+      <div class="customer-card-actions">
+        {% if vendor.balance > 0 %}
+        <a class="btn btn-sm btn-success" href="{{ url_for('vendor_detail', vendor_id=vendor.id, action='vpay') }}">
+          <i data-lucide="hand-coins" aria-hidden="true"></i>Payment
+        </a>
+        {% endif %}
+        <a class="btn btn-sm" href="{{ url_for('vendor_detail', vendor_id=vendor.id) }}">
+          <i data-lucide="book-open" aria-hidden="true"></i>Open account
+        </a>
+      </div>
+
+      {% if vendor.notes %}
+      <p class="customer-card-note"><strong>Note:</strong> {{ vendor.notes|truncate(74) }}</p>
+      {% endif %}
+    </article>
+    {% endfor %}
   </div>
   {% if vendors %}
     <div data-registry-empty hidden>

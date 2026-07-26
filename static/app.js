@@ -205,26 +205,6 @@
     btn.addEventListener("click", function () { window.print(); });
   });
 
-  /* ---------- Void entry: one shared dialog, action set per row ---------- */
-
-  (function () {
-    var dialog = document.getElementById("sheet-void");
-    var form = document.querySelector("[data-void-form]");
-    if (!dialog || !form) return;
-    document.querySelectorAll("[data-void]").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        form.setAttribute("action", btn.getAttribute("data-void"));
-        form.reset();
-        form.dataset.submitted = "";
-        var submit = form.querySelector('button[type="submit"]');
-        if (submit) { submit.classList.remove("is-loading"); submit.disabled = false; }
-        dialog.showModal();
-        var reason = form.querySelector("input, textarea");
-        if (reason) reason.focus();
-      });
-    });
-  })();
-
   /* ---------- Pay full balance ---------- */
 
   document.querySelectorAll("[data-fill-balance]").forEach(function (btn) {

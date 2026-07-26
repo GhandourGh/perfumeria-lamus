@@ -76,7 +76,7 @@
 
       <div class="customer-card-actions">
         {% if customer.balance > 0 %}
-        <a class="btn btn-sm btn-gold"
+        <a class="btn btn-sm btn-success"
            href="{{ url_for('customer_detail', customer_id=customer.id, action='pay') }}">
           <i data-lucide="hand-coins" aria-hidden="true"></i>Payment
         </a>
