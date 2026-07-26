@@ -1,5 +1,6 @@
 import html
 import re
+import sqlite3
 from pathlib import Path
 
 from bs4 import BeautifulSoup
@@ -104,6 +105,26 @@ def test_english_can_be_selected_globally():
 def test_colombian_currency_and_dates():
     assert i18n.format_cop(1_860_000, "es_CO") == "$1.860.000"
     assert i18n.format_day("2026-07-26", "es_CO") == "26 jul 2026"
+
+
+def test_bank_withdrawal_allows_an_empty_note(tmp_path, monkeypatch):
+    test_database = tmp_path / "bank-note-test.db"
+    source = sqlite3.connect(db.DATABASE)
+    destination = sqlite3.connect(test_database)
+    source.backup(destination)
+    source.close()
+    destination.close()
+    monkeypatch.setattr(db, "DATABASE", str(test_database))
+
+    starting_balance = db.get_current_bank_balance()
+    entry_id = db.change_bank_balance(1_000, "REMOVE", "", user_id=1)
+
+    assert db.get_current_bank_balance() == starting_balance - 1_000
+    with sqlite3.connect(test_database) as connection:
+        note = connection.execute(
+            "SELECT note FROM bank_balance_log WHERE id = ?", (entry_id,)
+        ).fetchone()[0]
+    assert note == ""
 
 
 def test_navbar_has_one_click_backup_download():

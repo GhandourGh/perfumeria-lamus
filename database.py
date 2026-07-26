@@ -848,8 +848,6 @@ def change_bank_balance(amount, change_type, note=None, user_id=None, bank_accou
         raise ValueError("Amount must be positive")
     if change_type not in {"ADD", "REMOVE"}:
         raise ValueError("Invalid bank action")
-    if change_type == "REMOVE" and not (note or "").strip():
-        raise ValueError("A note is required when removing money")
     with get_db() as conn:
         cur = conn.cursor()
         current = _get_current_bank_balance(cur)
