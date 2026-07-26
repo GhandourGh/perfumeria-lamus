@@ -16,7 +16,7 @@
   </div>
 </header>
 
-<section class="grid grid-3" aria-label="Key figures">
+<section class="grid grid-stats" aria-label="Key figures">
   <div class="stat">
     <div class="stat-label">Outstanding balance</div>
     <div class="stat-value {% if stats.total_outstanding > 0 %}is-due{% endif %}">{{ stats.total_outstanding|cop }}</div>
@@ -31,6 +31,11 @@
     <div class="stat-label">New credit today</div>
     <div class="stat-value">{{ stats.debt_added_today|cop }}</div>
     <div class="stat-note">{{ stats.debts_today }} credit sale{{ 's' if stats.debts_today != 1 }} recorded</div>
+  </div>
+  <div class="stat stat-accent">
+    <div class="stat-label">Bank balance</div>
+    <div class="stat-value">{{ stats.bank_balance|cop }}</div>
+    <div class="stat-note">Bancolombia · main account</div>
   </div>
 </section>
 
