@@ -34,7 +34,7 @@ def _database_snapshot():
     return snapshot
 
 
-def create_backup(folder=None):
+def create_backup(folder=None, automatic=False):
     """Create a complete, portable archive of all Lamus data."""
     target_dir = Path(folder) if folder else configured_folder()
     target_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
@@ -61,19 +61,26 @@ def create_backup(folder=None):
         output.chmod(0o600)
     finally:
         snapshot.unlink(missing_ok=True)
-    _write_state(output)
+    _write_state(output, automatic=automatic)
     _prune(target_dir)
     return output
 
 
-def _write_state(path):
+def _write_state(path, automatic=False):
     state = _read_state()
-    state.update({
+    updates = {
         "last_backup_date": date.today().isoformat(),
         "last_backup_at": datetime.now().isoformat(timespec="minutes"),
         "last_backup_path": str(path),
         "last_error": "",
-    })
+    }
+    if automatic:
+        updates.update({
+            "last_auto_backup_date": date.today().isoformat(),
+            "last_auto_backup_at": datetime.now().isoformat(timespec="minutes"),
+            "last_auto_backup_path": str(path),
+        })
+    state.update(updates)
     STATE_PATH.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
     STATE_PATH.write_text(json.dumps(state, indent=2), encoding="utf-8")
     STATE_PATH.chmod(0o600)
@@ -156,6 +163,17 @@ def status():
     return state
 
 
+def run_due_backup(now_value=None):
+    now_value = now_value or datetime.now()
+    state = _read_state()
+    enabled = state.get("enabled", True)
+    due = now_value.strftime("%H:%M") >= state.get("backup_time", "20:00")
+    already_done = state.get("last_auto_backup_date") == now_value.date().isoformat()
+    if enabled and due and not already_done:
+        return create_backup(automatic=True)
+    return None
+
+
 def _extract_database(upload):
     raw = upload.read()
     try:
@@ -206,15 +224,12 @@ def _daily_worker(app):
     with app.app_context():
         while True:
             state = _read_state()
-            enabled = state.get("enabled", True)
-            due = datetime.now().strftime("%H:%M") >= state.get("backup_time", "20:00")
-            if enabled and due and state.get("last_backup_date") != date.today().isoformat():
-                try:
-                    create_backup()
-                except Exception as exc:
-                    state["last_error"] = str(exc)
-                    STATE_PATH.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
-                    STATE_PATH.write_text(json.dumps(state, indent=2), encoding="utf-8")
+            try:
+                run_due_backup()
+            except Exception as exc:
+                state["last_error"] = str(exc)
+                STATE_PATH.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+                STATE_PATH.write_text(json.dumps(state, indent=2), encoding="utf-8")
             threading.Event().wait(60)
 
 

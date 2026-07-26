@@ -57,7 +57,7 @@
         <i data-lucide="circle-check" aria-hidden="true"></i>
         <span>
           <strong>{{ backup.backup_count }} saved {{ "copy" if backup.backup_count == 1 else "copies" }}</strong>
-          <small>{{ backup.last_backup_at|replace("T", " · ") if backup.last_backup_at else "No automatic backup yet" }} · {{ backup.folder }}</small>
+          <small>{{ backup.last_auto_backup_at|replace("T", " · ") if backup.last_auto_backup_at else "No automatic backup yet" }} · {{ backup.folder }}</small>
         </span>
       </div>
       <button class="btn btn-dark" type="submit">Save changes</button>
