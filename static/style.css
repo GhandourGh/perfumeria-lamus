@@ -403,6 +403,56 @@ p { margin: 0; }
 }
 
 /* --------------------------------------------------------------------------
+   Page end marker
+   -------------------------------------------------------------------------- */
+
+.site-footer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-4);
+  margin-top: var(--space-8);
+  padding: var(--space-5) 0 var(--space-2);
+  border-top: 1px solid var(--rule);
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.site-footer-end,
+.site-footer-top {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  white-space: nowrap;
+}
+
+.site-footer-end {
+  color: var(--ink-soft);
+  font-weight: 650;
+}
+
+.site-footer-end i,
+.site-footer-end svg,
+.site-footer-top i,
+.site-footer-top svg {
+  width: 15px;
+  height: 15px;
+}
+
+.site-footer-end i,
+.site-footer-end svg { color: var(--laurel-deep); }
+
+.site-footer-brand { text-align: center; }
+
+.site-footer-top {
+  justify-self: end;
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
+.site-footer-top:hover { color: var(--gold-deep); }
+
+/* --------------------------------------------------------------------------
    Page header
    -------------------------------------------------------------------------- */
 
@@ -1466,7 +1516,7 @@ dialog.sheet[open] { animation: sheet-in .22s ease both; }
 
 @media print {
   body { background: #fff; color: #111; font-size: 12px; }
-  .topnav, .scrim, .toasts, .no-print, .page-actions, .toolbar, .row-actions { display: none !important; }
+  .topnav, .scrim, .toasts, .no-print, .page-actions, .toolbar, .row-actions, .site-footer { display: none !important; }
   .main { margin: 0; padding: 0; max-width: none; }
   .main > * { animation: none; }
   .print-only { display: block; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid #111; }
@@ -1537,6 +1587,14 @@ dialog.sheet[open] { animation: sheet-in .22s ease both; }
   .page-head { align-items: stretch; flex-direction: column; }
   .page-actions .btn { flex: 1 1 auto; }
   h1 { font-size: 28px; }
+  .site-footer {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .site-footer-brand {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    text-align: left;
+  }
 }
 
 @media (max-width: 480px) {

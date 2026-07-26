@@ -89,6 +89,18 @@
         {% endif %}
       {% endwith %}
       {% block content %}{% endblock %}
+
+      <footer class="site-footer" aria-label="End of page">
+        <span class="site-footer-end">
+          <i data-lucide="circle-check" aria-hidden="true"></i>
+          End of page
+        </span>
+        <span class="site-footer-brand">Perfumería Lamus · Maison Ledger</span>
+        <a class="site-footer-top" href="#main">
+          Back to top
+          <i data-lucide="arrow-up" aria-hidden="true"></i>
+        </a>
+      </footer>
     </main>
 
   <script src="{{ url_for('static', filename='app.js') }}" defer></script>
