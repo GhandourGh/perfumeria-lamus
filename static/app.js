@@ -17,6 +17,23 @@
 
   if (window.lucide) lucide.createIcons();
 
+  var backLink = document.querySelector("[data-back-link]");
+  if (backLink) {
+    backLink.addEventListener("click", function (event) {
+      if (window.history.length > 1 && document.referrer) {
+        try {
+          var previous = new URL(document.referrer);
+          if (previous.origin === window.location.origin && previous.pathname !== "/login") {
+            event.preventDefault();
+            window.history.back();
+          }
+        } catch (error) {
+          /* Keep the link's safe overview fallback. */
+        }
+      }
+    });
+  }
+
   /* ---------- Mobile drawer ---------- */
 
   var toggle = document.querySelector("[data-nav-toggle]");

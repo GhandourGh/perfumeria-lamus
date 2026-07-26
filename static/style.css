@@ -1611,6 +1611,35 @@ dialog.sheet[open] { animation: sheet-in .22s ease both; }
   color: var(--garnet-deep); background: var(--garnet-wash);
   border: 1px solid var(--rule); border-radius: var(--radius);
 }
+
+/* Consistent page navigation */
+.page-back-row {
+  display: flex;
+  margin-bottom: var(--space-3);
+}
+.page-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 7px 11px 7px 8px;
+  color: var(--ink-soft);
+  border-radius: var(--radius-sm);
+  font-weight: 750;
+  text-decoration: none;
+}
+.page-back:hover {
+  color: var(--ink);
+  background: var(--gold-wash);
+}
+.page-back:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+.page-back svg {
+  width: 18px;
+  height: 18px;
+}
 .backup-alert svg { flex: 0 0 auto; }
 .field small { color: var(--muted); }
 .manual-backup-panel {
