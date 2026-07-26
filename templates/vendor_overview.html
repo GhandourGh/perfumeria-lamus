@@ -44,15 +44,6 @@
     <h2><i data-lucide="package"></i>Find a vendor</h2>
     <div class="panel-head-actions">
       <span class="hint">Open an account to record a purchase or payment.</span>
-      {% if vendors|length > 6 %}
-      <button class="btn btn-sm" type="button"
-              data-expand-cards="dashboard-vendor-cards"
-              aria-controls="dashboard-vendor-cards"
-              aria-expanded="false">
-        <i data-lucide="layout-grid" aria-hidden="true"></i>
-        <span data-expand-label>Show all</span>
-      </button>
-      {% endif %}
     </div>
   </div>
   <div class="toolbar">
@@ -110,6 +101,17 @@
     </article>
     {% endfor %}
   </div>
+  {% if vendors|length > 6 %}
+  <div class="panel-expand-footer">
+    <button class="btn btn-sm" type="button"
+            data-expand-cards="dashboard-vendor-cards"
+            aria-controls="dashboard-vendor-cards"
+            aria-expanded="false">
+      <i data-lucide="layout-grid" aria-hidden="true"></i>
+      <span data-expand-label>Show all</span>
+    </button>
+  </div>
+  {% endif %}
   {% if vendors %}
     <div data-registry-empty hidden>
       {{ ui.empty_state('No matches', 'No vendor matches that search. Try a shorter part of the name or phone number.') }}
@@ -127,15 +129,6 @@
       <h2><i data-lucide="package"></i>Largest payables</h2>
       <div class="panel-head-actions">
         <a class="btn btn-sm" href="{{ url_for('vendors') }}"><i data-lucide="package"></i>All vendors</a>
-        {% if stats.largest_payables %}
-        <button class="btn btn-sm" type="button"
-                data-expand-panel="vendor-payables-list"
-                aria-controls="vendor-payables-list"
-                aria-expanded="false">
-          <i data-lucide="maximize-2" aria-hidden="true"></i>
-          <span data-expand-label>Expand</span>
-        </button>
-        {% endif %}
       </div>
     </div>
     {% if stats.largest_payables %}
@@ -155,6 +148,15 @@
           </tbody>
         </table>
       </div>
+      <div class="panel-expand-footer">
+        <button class="btn btn-sm" type="button"
+                data-expand-panel="vendor-payables-list"
+                aria-controls="vendor-payables-list"
+                aria-expanded="false">
+          <i data-lucide="maximize-2" aria-hidden="true"></i>
+          <span data-expand-label>Expand</span>
+        </button>
+      </div>
     {% else %}
       {{ ui.empty_state('All settled', 'The store owes nothing to its vendors right now.') }}
     {% endif %}
@@ -163,15 +165,7 @@
   <div class="panel" aria-label="Recent vendor activity">
     <div class="panel-head panel-head-vendor">
       <h2><i data-lucide="package"></i>Recent activity</h2>
-      {% if recent_activity %}
-      <button class="btn btn-sm" type="button"
-              data-expand-panel="vendor-recent-list"
-              aria-controls="vendor-recent-list"
-              aria-expanded="false">
-        <i data-lucide="maximize-2" aria-hidden="true"></i>
-        <span data-expand-label>Expand</span>
-      </button>
-      {% endif %}
+      <span class="hint">Latest purchases &amp; payments</span>
     </div>
     {% if recent_activity %}
       <div class="table-scroll panel-list-scroll" id="vendor-recent-list" data-expandable>
@@ -192,6 +186,15 @@
             {% endfor %}
           </tbody>
         </table>
+      </div>
+      <div class="panel-expand-footer">
+        <button class="btn btn-sm" type="button"
+                data-expand-panel="vendor-recent-list"
+                aria-controls="vendor-recent-list"
+                aria-expanded="false">
+          <i data-lucide="maximize-2" aria-hidden="true"></i>
+          <span data-expand-label>Expand</span>
+        </button>
       </div>
     {% else %}
       {{ ui.empty_state('A fresh book', 'Vendor purchases and payments will appear here as you record them.') }}

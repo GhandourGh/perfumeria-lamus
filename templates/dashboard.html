@@ -39,15 +39,6 @@
     <h2>Find a customer</h2>
     <div class="panel-head-actions">
       <span class="hint">Open an account to record a credit sale or payment.</span>
-      {% if customers|length > 6 %}
-      <button class="btn btn-sm" type="button"
-              data-expand-cards="dashboard-customer-cards"
-              aria-controls="dashboard-customer-cards"
-              aria-expanded="false">
-        <i data-lucide="layout-grid" aria-hidden="true"></i>
-        <span data-expand-label>Show all</span>
-      </button>
-      {% endif %}
     </div>
   </div>
   <div class="toolbar">
@@ -107,6 +98,17 @@
     </article>
     {% endfor %}
   </div>
+  {% if customers|length > 6 %}
+  <div class="panel-expand-footer">
+    <button class="btn btn-sm" type="button"
+            data-expand-cards="dashboard-customer-cards"
+            aria-controls="dashboard-customer-cards"
+            aria-expanded="false">
+      <i data-lucide="layout-grid" aria-hidden="true"></i>
+      <span data-expand-label>Show all</span>
+    </button>
+  </div>
+  {% endif %}
   {% if customers %}
     <div data-registry-empty hidden>
       {{ ui.empty_state('No matches', 'No customer matches that search. Try a shorter part of the name or phone number.') }}
@@ -122,15 +124,7 @@
   <div class="panel" aria-label="Recent activity">
     <div class="panel-head">
       <h2>Recent activity</h2>
-      {% if recent_activity %}
-      <button class="btn btn-sm" type="button"
-              data-expand-panel="customer-recent-list"
-              aria-controls="customer-recent-list"
-              aria-expanded="false">
-        <i data-lucide="maximize-2" aria-hidden="true"></i>
-        <span data-expand-label>Expand</span>
-      </button>
-      {% endif %}
+      <span class="hint">Latest ledger entries</span>
     </div>
     {% if recent_activity %}
       <div class="table-scroll panel-list-scroll" id="customer-recent-list" data-expandable>
@@ -152,6 +146,15 @@
           </tbody>
         </table>
       </div>
+      <div class="panel-expand-footer">
+        <button class="btn btn-sm" type="button"
+                data-expand-panel="customer-recent-list"
+                aria-controls="customer-recent-list"
+                aria-expanded="false">
+          <i data-lucide="maximize-2" aria-hidden="true"></i>
+          <span data-expand-label>Expand</span>
+        </button>
+      </div>
     {% else %}
       {{ ui.empty_state('A fresh book', 'Ledger entries will appear here as you record credit sales and payments.') }}
     {% endif %}
@@ -162,15 +165,6 @@
       <h2>Largest balances</h2>
       <div class="panel-head-actions">
         <a class="btn btn-sm" href="{{ url_for('customers') }}"><i data-lucide="users"></i>All customers</a>
-        {% if stats.largest_balances %}
-        <button class="btn btn-sm" type="button"
-                data-expand-panel="customer-balances-list"
-                aria-controls="customer-balances-list"
-                aria-expanded="false">
-          <i data-lucide="maximize-2" aria-hidden="true"></i>
-          <span data-expand-label>Expand</span>
-        </button>
-        {% endif %}
       </div>
     </div>
     {% if stats.largest_balances %}
@@ -189,6 +183,15 @@
             {% endfor %}
           </tbody>
         </table>
+      </div>
+      <div class="panel-expand-footer">
+        <button class="btn btn-sm" type="button"
+                data-expand-panel="customer-balances-list"
+                aria-controls="customer-balances-list"
+                aria-expanded="false">
+          <i data-lucide="maximize-2" aria-hidden="true"></i>
+          <span data-expand-label>Expand</span>
+        </button>
       </div>
     {% else %}
       {{ ui.empty_state('All settled', 'No customer currently carries a balance.') }}
