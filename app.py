@@ -475,7 +475,16 @@ def bank():
 def backups():
     if request.method == "POST":
         try:
-            if request.form.get("action") == "restore":
+            action = request.form.get("action")
+            if action == "schedule":
+                backup_manager.save_schedule(
+                    request.form.get("enabled") == "1",
+                    request.form.get("backup_time", ""),
+                    request.form.get("location", ""),
+                    request.form.get("custom_folder", ""),
+                )
+                flash("Automatic backup settings saved.", "success")
+            elif action == "restore":
                 if request.form.get("confirmation") != "RESTORE":
                     raise ValueError("Type RESTORE exactly to confirm.")
                 backup_manager.restore_backup(request.files.get("backup_file"))

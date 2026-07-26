@@ -17,6 +17,19 @@
 
   if (window.lucide) lucide.createIcons();
 
+  var backupLocation = document.querySelector("[data-backup-location]");
+  var customFolder = document.querySelector("[data-custom-folder]");
+  if (backupLocation && customFolder) {
+    function syncBackupLocation() {
+      var custom = backupLocation.value === "custom";
+      customFolder.classList.toggle("is-hidden", !custom);
+      var input = customFolder.querySelector("input");
+      if (input) input.required = custom;
+    }
+    backupLocation.addEventListener("change", syncBackupLocation);
+    syncBackupLocation();
+  }
+
   /* ---------- Mobile drawer ---------- */
 
   var toggle = document.querySelector("[data-nav-toggle]");
