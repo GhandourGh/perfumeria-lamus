@@ -199,6 +199,21 @@
     apply();
   });
 
+  /* ---------- Compact dashboard lists ---------- */
+
+  document.querySelectorAll("[data-expand-panel]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      var panel = document.getElementById(button.getAttribute("data-expand-panel"));
+      if (!panel) return;
+      var expanded = button.getAttribute("aria-expanded") === "true";
+      button.setAttribute("aria-expanded", expanded ? "false" : "true");
+      panel.classList.toggle("is-expanded", !expanded);
+      var label = button.querySelector("[data-expand-label]");
+      if (label) label.textContent = expanded ? "Expand" : "Collapse";
+      if (expanded) panel.scrollTop = 0;
+    });
+  });
+
   /* ---------- Print buttons ---------- */
 
   document.querySelectorAll("[data-print]").forEach(function (btn) {

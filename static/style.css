@@ -475,6 +475,13 @@ body[data-section="vendor"] .identity-seal {
 .panel-head h2 i, .panel-head h2 svg.lucide { width: 17px; height: 17px; }
 .panel-head-customer h2 i, .panel-head-customer h2 svg.lucide { color: var(--gold); }
 .panel-head-vendor h2 i, .panel-head-vendor h2 svg.lucide { color: var(--vendor-ink); }
+.panel-head-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
 
 .grid { display: grid; gap: var(--space-4); }
 .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -628,6 +635,15 @@ body[data-section="vendor"] .identity-seal {
    -------------------------------------------------------------------------- */
 
 .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+.panel-list-scroll {
+  max-height: 280px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.panel-list-scroll.is-expanded { max-height: none; }
 
 .table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .table th {
@@ -1341,6 +1357,7 @@ dialog.sheet[open] { animation: sheet-in .22s ease both; }
   .print-only { display: block; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid #111; }
   .print-only h1 { font-size: 22px; }
   .panel, .stat { box-shadow: none; border-color: #ccc; background: #fff; break-inside: avoid; }
+  .panel-list-scroll { max-height: none; overflow: visible; }
   .grid, .grid-2, .grid-3, .grid-stats { display: block; }
   .grid > *, .grid-stats > * { margin-bottom: 10px; }
   .table th { color: #333; border-bottom-color: #333; }

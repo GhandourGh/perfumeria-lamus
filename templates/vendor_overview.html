@@ -111,10 +111,21 @@
   <div class="panel" aria-label="Largest payables">
     <div class="panel-head panel-head-vendor">
       <h2><i data-lucide="package"></i>Largest payables</h2>
-      <a class="btn btn-sm" href="{{ url_for('vendors') }}"><i data-lucide="package"></i>All vendors</a>
+      <div class="panel-head-actions">
+        <a class="btn btn-sm" href="{{ url_for('vendors') }}"><i data-lucide="package"></i>All vendors</a>
+        {% if stats.largest_payables %}
+        <button class="btn btn-sm" type="button"
+                data-expand-panel="vendor-payables-list"
+                aria-controls="vendor-payables-list"
+                aria-expanded="false">
+          <i data-lucide="maximize-2" aria-hidden="true"></i>
+          <span data-expand-label>Expand</span>
+        </button>
+        {% endif %}
+      </div>
     </div>
     {% if stats.largest_payables %}
-      <div class="table-scroll">
+      <div class="table-scroll panel-list-scroll" id="vendor-payables-list" data-expandable>
         <table class="table">
           <tbody>
             {% for vendor in stats.largest_payables %}
@@ -138,10 +149,18 @@
   <div class="panel" aria-label="Recent vendor activity">
     <div class="panel-head panel-head-vendor">
       <h2><i data-lucide="package"></i>Recent activity</h2>
-      <span class="hint">Latest purchases &amp; payments</span>
+      {% if recent_activity %}
+      <button class="btn btn-sm" type="button"
+              data-expand-panel="vendor-recent-list"
+              aria-controls="vendor-recent-list"
+              aria-expanded="false">
+        <i data-lucide="maximize-2" aria-hidden="true"></i>
+        <span data-expand-label>Expand</span>
+      </button>
+      {% endif %}
     </div>
     {% if recent_activity %}
-      <div class="table-scroll">
+      <div class="table-scroll panel-list-scroll" id="vendor-recent-list" data-expandable>
         <table class="table">
           <tbody>
             {% for row in recent_activity %}
