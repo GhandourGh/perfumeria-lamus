@@ -1631,8 +1631,25 @@ dialog.sheet[open] { animation: sheet-in .22s ease both; }
   padding-bottom: var(--space-4); border-bottom: 1px solid var(--hairline);
 }
 .restore-form {
-  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
-  gap: var(--space-4); align-items: end; margin-top: var(--space-4);
+  margin-top: var(--space-4);
+}
+.restore-fields {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+.restore-actions {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: var(--space-4); margin-top: var(--space-4); padding-top: var(--space-4);
+  border-top: 1px solid var(--hairline);
+}
+.restore-actions p {
+  display: flex; align-items: center; gap: var(--space-2);
+  margin: 0; color: var(--muted);
+}
+.restore-actions p svg { flex: 0 0 auto; color: var(--laurel); }
+.restore-actions .btn { min-width: 190px; }
+.restore-fields input[type="file"] {
+  min-height: 50px; padding: 8px 10px;
 }
 
 .nav-backup-menu { position: relative; }
@@ -1659,7 +1676,9 @@ dialog.sheet[open] { animation: sheet-in .22s ease both; }
   .nav-backup-dropdown { position: static; width: 100%; margin-top: 4px; box-shadow: none; }
 }
 @media (max-width: 900px) {
-  .restore-form { grid-template-columns: 1fr; }
+  .restore-fields { grid-template-columns: 1fr; }
+  .restore-actions { align-items: stretch; flex-direction: column; }
+  .restore-actions .btn { width: 100%; }
   .manual-backup-panel { align-items: stretch; flex-direction: column; }
   .manual-backup-panel .btn { width: 100%; }
 }

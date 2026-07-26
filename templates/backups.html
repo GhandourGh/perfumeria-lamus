@@ -34,13 +34,20 @@
   </div>
   <form method="post" enctype="multipart/form-data" class="restore-form">
     <input type="hidden" name="action" value="restore">
-    <label class="field"><span>Backup file</span><input type="file" name="backup_file" accept=".lamusbackup" required></label>
-    <label class="field">
-      <span>Type RESTORE to confirm</span>
-      <input type="text" name="confirmation" required autocomplete="off" aria-describedby="restore-help">
-      <small id="restore-help">A safety copy is created before anything changes.</small>
-    </label>
-    <button class="btn btn-danger" type="submit"><i data-lucide="rotate-ccw" aria-hidden="true"></i>Restore</button>
+    <div class="restore-fields">
+      <label class="field">
+        <span>Backup file</span>
+        <input type="file" name="backup_file" accept=".lamusbackup" required>
+      </label>
+      <label class="field">
+        <span>Type RESTORE to confirm</span>
+        <input type="text" name="confirmation" required autocomplete="off" aria-describedby="restore-help">
+      </label>
+    </div>
+    <div class="restore-actions">
+      <p id="restore-help"><i data-lucide="shield-check" aria-hidden="true"></i>A safety copy is created before anything changes.</p>
+      <button class="btn btn-danger" type="submit"><i data-lucide="rotate-ccw" aria-hidden="true"></i>Restore everything</button>
+    </div>
   </form>
 </section>
 {% endblock %}
