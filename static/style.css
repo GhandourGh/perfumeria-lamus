@@ -1767,6 +1767,14 @@ dialog.sheet[open] { animation: sheet-in .22s ease both; }
 .topnav { gap: var(--space-3); }
 .topnav-brand { margin-right: var(--space-4); }
 .topnav-links { gap: 6px; }
+.nav-primary {
+  position: absolute;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transform: translateX(-50%);
+}
 .nav-menu { position: relative; flex: 0 0 auto; }
 .nav-menu summary { list-style: none; }
 .nav-menu summary::-webkit-details-marker { display: none; }
@@ -1882,6 +1890,13 @@ dialog.sheet[open] { animation: sheet-in .22s ease both; }
 
 @media (max-width: 1080px) {
   body.nav-open .topnav-links { gap: 5px; }
+  body.nav-open .nav-primary {
+    position: static;
+    display: grid;
+    width: 100%;
+    gap: 5px;
+    transform: none;
+  }
   body.nav-open .nav-menu { width: 100%; }
   body.nav-open .nav-menu-trigger,
   body.nav-open .nav-account-trigger { width: 100%; justify-content: flex-start; }
