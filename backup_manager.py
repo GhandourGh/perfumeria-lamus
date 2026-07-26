@@ -126,6 +126,11 @@ def save_schedule(enabled, backup_time, location, custom_folder=""):
     except OSError:
         raise ValueError("Lamus cannot write to that folder. Choose another location.")
     state = _read_state()
+    schedule_changed = (
+        state.get("backup_time", "20:00") != backup_time
+        or state.get("location", "documents") != location
+        or (location == "custom" and state.get("custom_folder", "") != str(folder))
+    )
     state.update({
         "enabled": bool(enabled),
         "backup_time": backup_time,
@@ -133,6 +138,12 @@ def save_schedule(enabled, backup_time, location, custom_folder=""):
         "custom_folder": str(folder) if location == "custom" else "",
         "last_error": "",
     })
+    if schedule_changed:
+        # A backup made under the old time/location must not prevent today's
+        # backup from running under the owner's newly saved choice.
+        state.pop("last_auto_backup_date", None)
+        state.pop("last_auto_backup_at", None)
+        state.pop("last_auto_backup_path", None)
     STATE_PATH.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
     STATE_PATH.write_text(json.dumps(state, indent=2), encoding="utf-8")
     STATE_PATH.chmod(0o600)
