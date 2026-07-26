@@ -163,6 +163,7 @@
       var q = (search && search.value || "").trim().toLowerCase();
       var pred = predicates[activeFilter] || predicates.all;
       var visible = 0;
+      registry.classList.toggle("is-searching", Boolean(q) || activeFilter !== "all");
       rows().forEach(function (row) {
         var hit = (!q || (row.dataset.search || "").indexOf(q) !== -1) && pred(row);
         row.hidden = !hit;
@@ -197,6 +198,21 @@
     });
     if (sortSel) sortSel.addEventListener("change", sortRows);
     apply();
+  });
+
+  /* ---------- Dashboard card limits ---------- */
+
+  document.querySelectorAll("[data-expand-cards]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      var grid = document.getElementById(button.getAttribute("data-expand-cards"));
+      if (!grid) return;
+      var expanded = button.getAttribute("aria-expanded") === "true";
+      button.setAttribute("aria-expanded", expanded ? "false" : "true");
+      grid.classList.toggle("is-expanded", !expanded);
+      var label = button.querySelector("[data-expand-label]");
+      if (label) label.textContent = expanded ? "Show all" : "Show less";
+      if (expanded) button.scrollIntoView({ block: "nearest" });
+    });
   });
 
   /* ---------- Compact dashboard lists ---------- */

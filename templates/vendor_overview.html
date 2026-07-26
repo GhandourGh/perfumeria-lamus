@@ -42,7 +42,18 @@
 <section class="panel" style="margin-top: var(--space-5)" aria-label="Find a vendor">
   <div class="panel-head panel-head-vendor">
     <h2><i data-lucide="package"></i>Find a vendor</h2>
-    <span class="hint">Open an account to record a purchase or payment.</span>
+    <div class="panel-head-actions">
+      <span class="hint">Open an account to record a purchase or payment.</span>
+      {% if vendors|length > 6 %}
+      <button class="btn btn-sm" type="button"
+              data-expand-cards="dashboard-vendor-cards"
+              aria-controls="dashboard-vendor-cards"
+              aria-expanded="false">
+        <i data-lucide="layout-grid" aria-hidden="true"></i>
+        <span data-expand-label>Show all</span>
+      </button>
+      {% endif %}
+    </div>
   </div>
   <div class="toolbar">
     <div class="searchbox">
@@ -50,7 +61,10 @@
       <input type="search" data-registry-search placeholder="Search by name, phone, or note…" aria-label="Search vendors">
     </div>
   </div>
-  <div class="customer-card-grid" data-registry aria-label="Vendor accounts">
+  <div class="customer-card-grid dashboard-card-grid"
+       id="dashboard-vendor-cards"
+       data-registry
+       aria-label="Vendor accounts">
     {% for vendor in vendors %}
     <article class="customer-card vendor-card"
              data-row

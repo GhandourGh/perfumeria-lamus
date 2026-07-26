@@ -683,6 +683,10 @@ body[data-section="vendor"] .identity-seal {
   padding-top: var(--space-2);
 }
 
+.dashboard-card-grid:not(.is-expanded):not(.is-searching) > [data-row]:nth-child(n+7) {
+  display: none;
+}
+
 .customer-card {
   display: flex;
   min-width: 0;
@@ -1358,6 +1362,7 @@ dialog.sheet[open] { animation: sheet-in .22s ease both; }
   .print-only h1 { font-size: 22px; }
   .panel, .stat { box-shadow: none; border-color: #ccc; background: #fff; break-inside: avoid; }
   .panel-list-scroll { max-height: none; overflow: visible; }
+  .dashboard-card-grid > [data-row] { display: flex !important; }
   .grid, .grid-2, .grid-3, .grid-stats { display: block; }
   .grid > *, .grid-stats > * { margin-bottom: 10px; }
   .table th { color: #333; border-bottom-color: #333; }
