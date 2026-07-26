@@ -476,15 +476,7 @@ def backups():
     if request.method == "POST":
         try:
             action = request.form.get("action")
-            if action == "schedule":
-                backup_manager.save_schedule(
-                    request.form.get("enabled") == "1",
-                    request.form.get("backup_time", ""),
-                    request.form.get("location", ""),
-                    request.form.get("custom_folder", ""),
-                )
-                flash("Automatic backup settings saved.", "success")
-            elif action == "restore":
+            if action == "restore":
                 if request.form.get("confirmation") != "RESTORE":
                     raise ValueError("Type RESTORE exactly to confirm.")
                 backup_manager.restore_backup(request.files.get("backup_file"))
@@ -541,5 +533,4 @@ def _record_opening_balance(kind, person_id):
 
 
 if __name__ == "__main__":
-    backup_manager.start_scheduler(app)
     app.run(debug=os.environ.get("FLASK_DEBUG") == "1", host="127.0.0.1", port=5001)

@@ -1604,7 +1604,7 @@ dialog.sheet[open] { animation: sheet-in .22s ease both; }
 
 /* Backup & recovery */
 .backup-page-head { margin-bottom: var(--space-5); }
-.auto-backup-panel, .restore-panel { padding: var(--space-5); }
+.manual-backup-panel, .restore-panel { padding: var(--space-5); }
 .backup-alert {
   display: flex; gap: var(--space-3); align-items: flex-start;
   padding: var(--space-4); margin-bottom: var(--space-5);
@@ -1613,34 +1613,18 @@ dialog.sheet[open] { animation: sheet-in .22s ease both; }
 }
 .backup-alert svg { flex: 0 0 auto; }
 .field small { color: var(--muted); }
-.backup-panel-intro {
-  display: grid; grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: start; gap: var(--space-4); padding-bottom: var(--space-4);
-  border-bottom: 1px solid var(--hairline);
+.manual-backup-panel {
+  display: flex; justify-content: space-between; align-items: center; gap: var(--space-5);
 }
-.backup-panel-intro h2, .restore-heading h2 { margin: 3px 0 5px; }
+.manual-backup-copy {
+  display: grid; grid-template-columns: auto minmax(0, 1fr);
+  align-items: start; gap: var(--space-4);
+}
+.manual-backup-copy h2, .restore-heading h2 { margin: 3px 0 5px; }
 .backup-icon {
   display: grid; place-items: center; width: 46px; height: 46px;
   color: var(--gold-deep); background: var(--gold-wash); border-radius: var(--radius);
 }
-.backup-settings-form { margin-top: var(--space-4); }
-.backup-toggle { display: flex; align-items: flex-start; gap: var(--space-3); cursor: pointer; }
-.backup-toggle input { width: 18px; height: 18px; margin-top: 3px; accent-color: var(--laurel); }
-.backup-toggle span, .backup-last span { display: grid; gap: 2px; }
-.backup-toggle small, .backup-last small { color: var(--muted); }
-.backup-setting-fields {
-  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-4); margin-top: var(--space-4);
-}
-.backup-custom-field.is-hidden { display: none; }
-.backup-settings-footer {
-  display: flex; justify-content: space-between; align-items: flex-end;
-  gap: var(--space-4); margin-top: var(--space-5); padding-top: var(--space-4);
-  border-top: 1px solid var(--hairline);
-}
-.backup-last { display: flex; min-width: 0; gap: var(--space-3); align-items: flex-start; }
-.backup-last svg { flex: 0 0 auto; color: var(--laurel); }
-.backup-last small { overflow-wrap: anywhere; }
 .restore-panel { margin-top: var(--space-5); }
 .restore-heading {
   display: flex; justify-content: space-between; gap: var(--space-4);
@@ -1675,7 +1659,7 @@ dialog.sheet[open] { animation: sheet-in .22s ease both; }
   .nav-backup-dropdown { position: static; width: 100%; margin-top: 4px; box-shadow: none; }
 }
 @media (max-width: 900px) {
-  .backup-setting-fields, .restore-form { grid-template-columns: 1fr; }
-  .backup-settings-footer { align-items: stretch; flex-direction: column; }
-  .backup-settings-footer .btn { width: 100%; }
+  .restore-form { grid-template-columns: 1fr; }
+  .manual-backup-panel { align-items: stretch; flex-direction: column; }
+  .manual-backup-panel .btn { width: 100%; }
 }

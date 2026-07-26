@@ -3,19 +3,17 @@ import json
 import os
 import sqlite3
 import tempfile
-import threading
 import zipfile
-from datetime import date, datetime
+from datetime import datetime
 from pathlib import Path
 
 import database as db
 
 
 APP_VERSION = 1
-DEFAULT_BACKUP_DIR = Path.home() / "Documents" / "Perfumeria Lamus Backups"
+BACKUP_DIR = Path.home() / "Documents" / "Perfumeria Lamus Backups"
 STATE_PATH = Path(__file__).resolve().parent / "instance" / "backup_state.json"
 REQUIRED_TABLES = {"users", "customers", "ledger", "vendors", "vendor_ledger", "bank_accounts", "bank_balance_log", "audit_log"}
-_scheduler_started = False
 
 
 def _database_snapshot():
@@ -34,9 +32,9 @@ def _database_snapshot():
     return snapshot
 
 
-def create_backup(folder=None, automatic=False):
+def create_backup(folder=None):
     """Create a complete, portable archive of all Lamus data."""
-    target_dir = Path(folder) if folder else configured_folder()
+    target_dir = Path(folder) if folder else BACKUP_DIR
     target_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
     stamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S-%f")
     output = target_dir / f"Perfumeria-Lamus-{stamp}.lamusbackup"
@@ -61,25 +59,19 @@ def create_backup(folder=None, automatic=False):
         output.chmod(0o600)
     finally:
         snapshot.unlink(missing_ok=True)
-    _write_state(output, automatic=automatic)
+    _write_state(output)
     _prune(target_dir)
     return output
 
 
-def _write_state(path, automatic=False):
+def _write_state(path):
     state = _read_state()
     updates = {
-        "last_backup_date": date.today().isoformat(),
+        "last_backup_date": datetime.now().date().isoformat(),
         "last_backup_at": datetime.now().isoformat(timespec="minutes"),
         "last_backup_path": str(path),
         "last_error": "",
     }
-    if automatic:
-        updates.update({
-            "last_auto_backup_date": date.today().isoformat(),
-            "last_auto_backup_at": datetime.now().isoformat(timespec="minutes"),
-            "last_auto_backup_path": str(path),
-        })
     state.update(updates)
     STATE_PATH.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
     STATE_PATH.write_text(json.dumps(state, indent=2), encoding="utf-8")
@@ -93,70 +85,6 @@ def _read_state():
         return {}
 
 
-def _location_path(location, custom_folder=""):
-    choices = {
-        "documents": Path.home() / "Documents" / "Perfumeria Lamus Backups",
-        "desktop": Path.home() / "Desktop" / "Perfumeria Lamus Backups",
-        "downloads": Path.home() / "Downloads" / "Perfumeria Lamus Backups",
-    }
-    if location in choices:
-        return choices[location]
-    if location == "custom":
-        raw = (custom_folder or "").strip()
-        if not raw:
-            raise ValueError("Enter the custom backup folder.")
-        path = Path(raw).expanduser()
-        if not path.is_absolute():
-            raise ValueError("The custom folder must be a complete path.")
-        return path
-    raise ValueError("Choose a valid backup location.")
-
-
-def save_schedule(enabled, backup_time, location, custom_folder=""):
-    try:
-        datetime.strptime(backup_time, "%H:%M")
-    except ValueError:
-        raise ValueError("Choose a valid backup time.")
-    folder = _location_path(location, custom_folder)
-    try:
-        folder.mkdir(mode=0o700, parents=True, exist_ok=True)
-        probe = folder / ".lamus-write-test"
-        probe.write_text("ok", encoding="utf-8")
-        probe.unlink()
-    except OSError:
-        raise ValueError("Lamus cannot write to that folder. Choose another location.")
-    state = _read_state()
-    schedule_changed = (
-        state.get("backup_time", "20:00") != backup_time
-        or state.get("location", "documents") != location
-        or (location == "custom" and state.get("custom_folder", "") != str(folder))
-    )
-    state.update({
-        "enabled": bool(enabled),
-        "backup_time": backup_time,
-        "location": location,
-        "custom_folder": str(folder) if location == "custom" else "",
-        "last_error": "",
-    })
-    if schedule_changed:
-        # A backup made under the old time/location must not prevent today's
-        # backup from running under the owner's newly saved choice.
-        state.pop("last_auto_backup_date", None)
-        state.pop("last_auto_backup_at", None)
-        state.pop("last_auto_backup_path", None)
-    STATE_PATH.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
-    STATE_PATH.write_text(json.dumps(state, indent=2), encoding="utf-8")
-    STATE_PATH.chmod(0o600)
-
-
-def configured_folder():
-    state = _read_state()
-    try:
-        return _location_path(state.get("location", "documents"), state.get("custom_folder", ""))
-    except ValueError:
-        return DEFAULT_BACKUP_DIR
-
-
 def _prune(folder, keep=30):
     for old in sorted(Path(folder).glob("*.lamusbackup"), reverse=True)[keep:]:
         old.unlink(missing_ok=True)
@@ -164,25 +92,10 @@ def _prune(folder, keep=30):
 
 def status():
     state = _read_state()
-    state.setdefault("enabled", True)
-    state.setdefault("backup_time", "20:00")
-    state.setdefault("location", "documents")
-    state.setdefault("custom_folder", "")
-    folder = configured_folder()
+    folder = BACKUP_DIR
     state["folder"] = str(folder)
     state["backup_count"] = len(list(folder.glob("*.lamusbackup"))) if folder.exists() else 0
     return state
-
-
-def run_due_backup(now_value=None):
-    now_value = now_value or datetime.now()
-    state = _read_state()
-    enabled = state.get("enabled", True)
-    due = now_value.strftime("%H:%M") >= state.get("backup_time", "20:00")
-    already_done = state.get("last_auto_backup_date") == now_value.date().isoformat()
-    if enabled and due and not already_done:
-        return create_backup(automatic=True)
-    return None
 
 
 def _extract_database(upload):
@@ -229,24 +142,3 @@ def restore_backup(upload):
         os.replace(replacement, database_path)
     finally:
         candidate.unlink(missing_ok=True)
-
-
-def _daily_worker(app):
-    with app.app_context():
-        while True:
-            state = _read_state()
-            try:
-                run_due_backup()
-            except Exception as exc:
-                state["last_error"] = str(exc)
-                STATE_PATH.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
-                STATE_PATH.write_text(json.dumps(state, indent=2), encoding="utf-8")
-            threading.Event().wait(60)
-
-
-def start_scheduler(app):
-    global _scheduler_started
-    if _scheduler_started or app.config.get("TESTING"):
-        return
-    _scheduler_started = True
-    threading.Thread(target=_daily_worker, args=(app,), daemon=True, name="lamus-backups").start()
