@@ -2,7 +2,7 @@ import secrets
 import sqlite3
 from datetime import datetime
 
-from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.security import check_password_hash
 
 import database as db
 
@@ -31,7 +31,7 @@ def create_recovery_code(user_id):
         )
         conn.execute(
             "INSERT INTO password_recovery_codes (user_id, code_hash, created_at) VALUES (?, ?, ?)",
-            (user_id, generate_password_hash(code), datetime.now().isoformat(timespec="seconds")),
+            (user_id, db.hash_secret(code), datetime.now().isoformat(timespec="seconds")),
         )
         conn.commit()
     return code

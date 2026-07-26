@@ -8,6 +8,12 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 DATABASE = os.environ.get("PERFUMERIA_DB", "perfumeria_lamus.db")
 OVERDUE_AGING_DAYS = 30
+PASSWORD_HASH_METHOD = "pbkdf2:sha256:600000"
+
+
+def hash_secret(value):
+    """Create secure hashes on every supported Python version, including 3.9."""
+    return generate_password_hash(value, method=PASSWORD_HASH_METHOD)
 
 
 @contextmanager
@@ -193,7 +199,7 @@ def init_db():
                 VALUES (?, ?, ?, ?)
             """, (
                 os.environ.get("INITIAL_ADMIN_USERNAME", "busalim").strip() or "busalim",
-                generate_password_hash(initial_password),
+                hash_secret(initial_password),
                 os.environ.get("INITIAL_ADMIN_NAME", "BU SALIM").strip() or "BU SALIM",
                 "owner",
             ))
@@ -235,7 +241,7 @@ def verify_security_answer(user_id, answer):
 
 def change_password(user_id, new_password):
     with get_db() as conn:
-        conn.execute("UPDATE users SET password_hash = ? WHERE id = ?", (generate_password_hash(new_password), user_id))
+        conn.execute("UPDATE users SET password_hash = ? WHERE id = ?", (hash_secret(new_password), user_id))
         conn.commit()
 
 
