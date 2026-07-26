@@ -45,6 +45,12 @@ ES = {
     "Payable": "Por pagar", "All": "Todos", "Expand": "Ver más", "Collapse": "Ver menos",
     "Show all": "Ver todos", "Show less": "Ver menos", "No payments yet": "Aún no hay pagos",
     "No activity yet.": "Aún no hay movimientos.", "No account movements recorded yet.": "Aún no hay movimientos registrados.",
+    "All settled": "Todo al día",
+    "Add your first customer to start keeping their account in the ledger.": "Agrega tu primer cliente para comenzar a llevar su cuenta.",
+    "Ledger entries will appear here as you record credit sales and payments.": "Los movimientos aparecerán aquí cuando registres ventas a crédito y pagos.",
+    "No customer currently carries a balance.": "Ningún cliente tiene saldo pendiente.",
+    "Add your first customer to open their account in the house ledger.": "Agrega tu primer cliente para abrir su cuenta.",
+    "Vendor purchases and payments will appear here as you record them.": "Las compras y los pagos a proveedores aparecerán aquí cuando los registres.",
     # Dashboards and registries
     "Customers overview": "Resumen de clientes",
     "Customer credit, payments received, and who to follow up — at a glance.": "Créditos, pagos recibidos y clientes por gestionar, todo de un vistazo.",
